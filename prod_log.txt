@@ -1,0 +1,11 @@
+
+> xilex-app@1.0.0 start
+> next start
+
+  ▲ Next.js 14.2.0
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 1210ms
+
+C:\Dev\XILEX\xilex-app>

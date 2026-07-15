@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: #0EA5A0;
+    --primary-dark: #0B6E6B;
+    --primary-light: #E3F5F3;
+    --dark-bg: #0B1F1E;
+    --dark-surface: #0F2D2B;
+    --dark-border: #1A3A37;
+    --dark-text: #E0F5F3;
+    --dark-muted: #6BAA9E;
+    --light-bg: #F0FDFB;
+    --light-surface: #FFFFFF;
+    --light-border: #CCF2EE;
+    --light-text: #0B1F1E;
+    --light-muted: #5D9E93;
+  }
+
+  * {
+    @apply border-light-border dark:border-dark-border;
+  }
+
+  body {
+    @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text antialiased;
+    background-image: linear-gradient(to bottom right, var(--light-bg), #FFFFFF, var(--primary-light));
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-image: linear-gradient(to bottom right, #051817, var(--dark-bg), #052826);
+    }
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-light-bg dark:ring-offset-dark-bg;
+  }
+
+  ::selection {
+    @apply bg-primary/30 text-primary-dark dark:text-primary-light;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-dark-surface/70 border border-light-border dark:border-dark-border;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .glass {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-xl bg-dark-surface/80 dark:bg-dark-bg/90 border border-primary/20;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-strong {
+    @apply bg-white/80 dark:bg-dark-surface/90;
+  }
+
+  .glass-subtle {
+    @apply bg-white/50 dark:bg-dark-surface/50;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-white rounded-xl
+      bg-primary hover:bg-primary-dark
+      shadow-[0_4px_14px_rgba(14,165,160,0.3)]
+      transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed
+      active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary-dark dark:text-primary-light
+      bg-primary-light dark:bg-primary-dark/30
+      hover:bg-primary-light/80 dark:hover:bg-primary-dark/50
+      transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary
+      border-2 border-primary
+      hover:bg-primary hover:text-white
+      transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-primary
+      hover:bg-primary-light dark:hover:bg-primary-dark/20
+      rounded-xl
+      transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
+  }
+
+  .input-glass {
+    @apply w-full px-4 py-3 text-base text-light-text dark:text-dark-text
+      bg-white/80 dark:bg-dark-surface/80
+      border border-light-border dark:border-dark-border
+      rounded-xl
+      placeholder:text-light-muted dark:placeholder:text-dark-muted
+      backdrop-blur-sm
+      transition-all duration-200
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .label-glass {
+    @apply block text-sm font-medium text-light-text dark:text-dark-text mb-1.5;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300
+      hover:shadow-[0_8px_30px_rgba(14,165,160,0.15)] dark:hover:shadow-[0_8px_30px_rgba(94,234,212,0.1)]
+      hover:border-primary/30 dark:hover:border-primary/20
+      hover:scale-[1.01];
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
