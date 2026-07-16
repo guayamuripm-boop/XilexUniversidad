@@ -232,12 +232,21 @@ export default function SimulacrumPage() {
         }
       })
 
-      // Update all answers
-      const { error: sqError } = await supabase
-        .from('simulacrum_questions')
-        .upsert(sqUpdates)
+      // Update each question individually
+      for (const update of sqUpdates) {
+        const { error: sqError } = await supabase
+          .from('simulacrum_questions')
+          .update({
+            user_answer: update.user_answer,
+            is_correct: update.is_correct,
+            answered_at: update.answered_at,
+            time_spent_seconds: update.time_spent_seconds,
+          })
+          .eq('simulacrum_id', simulacrumId)
+          .eq('question_id', update.question_id)
 
-      if (sqError) throw sqError
+        if (sqError) throw sqError
+      }
 
       // Update simulacrum
       const score = simQuestions.length > 0 ? (correct / simQuestions.length) * 100 : 0
