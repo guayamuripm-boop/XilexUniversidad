@@ -3,9 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { GlassCard, GlassButton } from '@/components/ui/glass'
-import { useAuthStore } from '@/lib/store'
-import { Brain, Mail, Shield, Bell, Moon, Save, Loader2, CheckCircle2, AlertCircle, User, Target, ArrowRight } from 'lucide-react'
+import { GlassCard, GlassButton, GlassInput } from '@/components/ui/glass'
+import { useAuthStore, useUIStore } from '@/lib/store'
+import {
+  Brain, Save, CheckCircle2, Target, Moon, Download, Shield, Bell,
+  AlertCircle, LogOut, Trash2, Lock, Sun, Monitor, ArrowRight,
+  User, Eye, EyeOff, Key
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -19,11 +23,17 @@ const universities = [
 
 export default function SettingsPage() {
   const { user, setUser, clearUser } = useAuthStore()
+  const { theme, setTheme } = useUIStore()
+
   const [fullName, setFullName] = useState('')
   const [targetUnis, setTargetUnis] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const [darkMode, setDarkMode] = useState(true)
+
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [showCurrentPass, setShowCurrentPass] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const supabase = createClient()
 
@@ -32,8 +42,6 @@ export default function SettingsPage() {
       setFullName(user.full_name || '')
       setTargetUnis(user.target_universities || [])
     }
-    setDarkMode(true)
-    document.documentElement.classList.add('dark')
   }, [user])
 
   const handleToggleUni = (code: string) => {
@@ -65,6 +73,74 @@ export default function SettingsPage() {
     clearUser()
   }
 
+  const handleThemeChange = (t: 'light' | 'dark' | 'system') => {
+    setTheme(t)
+    if (t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
+
+  const handleExportData = async () => {
+    if (!user) return
+    try {
+      const [progressRes, simsRes] = await Promise.all([
+        supabase.from('user_progress').select('*').eq('user_id', user.id),
+        supabase.from('simulacrums').select('*').eq('user_id', user.id),
+      ])
+
+      const simIds = simsRes.data?.map(s => s.id) || []
+      const simQuestionsRes = await supabase
+        .from('simulacrum_questions')
+        .select('*, question:questions(*)')
+        .in('simulacrum_id', simIds)
+
+      const exportData = {
+        user: { id: user.id, email: user.email, full_name: user.full_name, target_universities: user.target_universities },
+        progress: progressRes?.data || [],
+        simulacrums: simsRes?.data || [],
+        simulacrumQuestions: simQuestionsRes?.data || [],
+        exportedAt: new Date().toISOString(),
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `xilex-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Error exportando:', err)
+      alert('Error al exportar datos')
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!currentPassword || !user) return
+    setDeleting(true)
+    try {
+      // Verify password by trying to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      })
+      if (signInError) throw signInError
+
+      // Delete user data (cascades should handle related tables)
+      await supabase.auth.admin.deleteUser(user.id)
+      clearUser()
+    } catch (err: any) {
+      console.error('Error eliminando cuenta:', err)
+      alert(err.message || 'Error al eliminar la cuenta. Verifica tu contraseña.')
+    } finally {
+      setDeleting(false)
+      setShowDeleteConfirm(false)
+      setCurrentPassword('')
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
@@ -76,41 +152,38 @@ export default function SettingsPage() {
               </div>
               <span className="font-bold text-xl text-white">XILEX</span>
             </Link>
-            <span className="text-sm text-blue-300/40">Configuraci&oacute;n</span>
+            <span className="text-sm text-blue-300/40">Configuración</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            Configuraci&oacute;n de <span className="text-primary">cuenta</span>
+            Configuración de <span className="text-primary">cuenta</span>
           </h1>
           <p className="text-blue-300/40">Gestiona tu perfil, preferencias y universidades objetivo</p>
         </div>
 
-        <GlassCard className="p-6 mb-6 rounded-3xl">
+        {/* Perfil */}
+        <GlassCard className="p-6 rounded-3xl">
           <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
             Perfil
           </h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Nombre completo
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Nombre completo</label>
               <input
                 type="text"
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white"
+                className="w-full px-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-blue-300/40"
                 placeholder="Tu nombre"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-blue-200 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-blue-200 mb-2">Email</label>
               <input
                 type="email"
                 value={user?.email || ''}
@@ -134,11 +207,12 @@ export default function SettingsPage() {
                 </>
               )}
             </GlassButton>
-            {saved && <p className="mt-3 text-sm text-accent-emerald flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Perfil actualizado</p>}
+            {saved && <p className="mt-3 text-sm text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Perfil actualizado</p>}
           </div>
         </GlassCard>
 
-        <GlassCard className="p-6 mb-6 rounded-3xl">
+        {/* Universidades objetivo */}
+        <GlassCard className="p-6 rounded-3xl">
           <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
             Universidades objetivo
@@ -163,28 +237,71 @@ export default function SettingsPage() {
                   onChange={() => handleToggleUni(uni.code)}
                   className="w-5 h-5 text-primary border-primary rounded focus:ring-primary/50"
                 />
-                <span className="font-medium text-white">{uni.name}</span>
+                <span className="text-white">{uni.name}</span>
               </label>
             ))}
           </div>
         </GlassCard>
 
-        <GlassCard className="p-6 mb-6 rounded-3xl">
+        {/* Apariencia */}
+        <GlassCard className="p-6 rounded-3xl">
           <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-            <Moon className="w-5 h-5 text-primary" />
+            <Monitor className="w-5 h-5 text-primary" />
             Apariencia
           </h2>
-          <div className="flex items-center justify-between p-4 rounded-2xl border border-white/[0.08]">
-            <div>
-              <p className="font-medium text-white">Modo oscuro</p>
-              <p className="text-sm text-blue-300/40">Siempre activo</p>
-            </div>
-            <div className="relative w-12 h-7 rounded-full bg-primary">
-              <div className="absolute top-0.5 left-5 w-6 h-6 rounded-full bg-white shadow-md transition-transform translate-x-0.5" />
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            {(['dark', 'light', 'system'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => handleThemeChange(t)}
+                className={cn(
+                  'flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all',
+                  theme === t
+                    ? 'border-primary bg-primary/10'
+                    : 'border-white/[0.08] hover:border-primary/30'
+                )}
+              >
+                <div className={cn(
+                  'w-12 h-12 rounded-xl flex items-center justify-center',
+                  t === 'dark' && 'bg-slate-900',
+                  t === 'light' && 'bg-slate-100',
+                  t === 'system' && 'bg-gradient-to-br from-slate-100 to-slate-900'
+                )}>
+                  {t === 'dark' && <Moon className="w-6 h-6 text-amber-400" />}
+                  {t === 'light' && <Sun className="w-6 h-6 text-blue-400" />}
+                  {t === 'system' && <Monitor className="w-6 h-6 text-primary" />}
+                </div>
+                <span className={cn('text-sm font-medium', theme === t ? 'text-primary' : 'text-blue-300/50')}>
+                  {t === 'dark' && 'Oscuro'}
+                  {t === 'light' && 'Claro'}
+                  {t === 'system' && 'Sistema'}
+                </span>
+              </button>
+            ))}
           </div>
         </GlassCard>
 
+        {/* Exportar datos */}
+        <GlassCard className="p-6 rounded-3xl">
+          <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+            <Download className="w-5 h-5 text-primary" />
+            Datos
+          </h2>
+          <p className="text-sm text-blue-300/40 mb-4">
+            Exporta todos tus datos de progreso, simulacros y respuestas en formato JSON.
+          </p>
+          <GlassButton
+            variant="secondary"
+            onClick={handleExportData}
+            className="w-full sm:w-auto rounded-2xl"
+            size="lg"
+          >
+            <Download className="w-5 h-5" />
+            Exportar mis datos
+          </GlassButton>
+        </GlassCard>
+
+        {/* Zona de peligro */}
         <GlassCard className="p-6 rounded-3xl border border-red-500/20">
           <h2 className="text-lg font-semibold text-red-400 mb-3 flex items-center gap-2">
             <AlertCircle className="w-5 h-5" />
@@ -193,14 +310,70 @@ export default function SettingsPage() {
           <p className="text-sm text-blue-300/40 mb-4">
             Estas acciones son irreversibles. Ten cuidado.
           </p>
-          <GlassButton
-            variant="ghost"
-            onClick={handleSignOut}
-            className="w-full sm:w-auto rounded-2xl border-red-500/20 text-red-400 hover:bg-red-500/10"
-            size="lg"
-          >
-            Cerrar sesi&oacute;n
-          </GlassButton>
+
+          <div className="space-y-3">
+            <GlassButton
+              variant="ghost"
+              onClick={handleSignOut}
+              className="w-full sm:w-auto rounded-2xl border-blue-500/20 text-blue-300 hover:bg-blue-500/10"
+              size="lg"
+            >
+              <LogOut className="w-5 h-5" />
+              Cerrar sesión
+            </GlassButton>
+
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-red-500/30 text-red-400 hover:bg-red-500/10 transition-all"
+            >
+              <Trash2 className="w-5 h-5" />
+              Eliminar cuenta permanentemente
+            </button>
+          </div>
+
+          {/* Delete confirmation modal */}
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+              <GlassCard className="p-6 rounded-3xl max-w-md w-full border-red-500/30" hover={false}>
+                <div className="w-14 h-14 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-7 h-7 text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white text-center mb-2">Eliminar cuenta</h3>
+                <p className="text-sm text-blue-300/50 text-center mb-6">
+                  Esta acción eliminará permanentemente tu cuenta, todo tu progreso, simulacros y datos. No se puede deshacer.
+                </p>
+                <GlassInput
+                  label="Escribe tu contraseña actual para confirmar"
+                  type={showCurrentPass ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  placeholder="••••••••"
+                  icon={<Lock className="w-5 h-5" />}
+                  togglePassword
+                  showPassword={showCurrentPass}
+                  onTogglePassword={() => setShowCurrentPass(!showCurrentPass)}
+                />
+                <div className="flex gap-3 mt-4">
+                  <GlassButton
+                    variant="ghost"
+                    onClick={() => { setShowDeleteConfirm(false); setCurrentPassword('') }}
+                    className="flex-1 rounded-2xl"
+                    size="lg"
+                  >
+                    Cancelar
+                  </GlassButton>
+                  <GlassButton
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || !currentPassword}
+                    className="flex-1 rounded-2xl border-red-500/20 text-red-400 hover:bg-red-500/10"
+                    size="lg"
+                  >
+                    {deleting ? 'Eliminando...' : 'Eliminar cuenta'}
+                  </GlassButton>
+                </div>
+              </GlassCard>
+            </div>
+          )}
         </GlassCard>
       </main>
     </div>
