@@ -1,14 +1,14 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard, GlassButton } from '@/components/ui/glass'
 import { useSimulacrumStore } from '@/lib/store'
-import { 
-  Brain, Clock, CheckCircle2, XCircle, ChevronLeft, ChevronRight, 
-  Flag, ArrowRight, Loader2, Play, Home, AlertCircle
+import {
+  Brain, Clock, CheckCircle2, XCircle, ChevronLeft, ChevronRight,
+  Flag, ArrowRight, Loader2, Play, Home, AlertCircle, Filter, Eye
 } from 'lucide-react'
 import { formatTime, cn, getDifficultyColor } from '@/lib/utils'
 
@@ -64,6 +64,8 @@ export default function SimulacrumPage() {
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'correct' | 'incorrect' | 'unanswered'>('all')
+  const [expandedExplanation, setExpandedExplanation] = useState<Record<string, boolean>>({})
 
   const supabase = createClient()
 
@@ -161,10 +163,18 @@ export default function SimulacrumPage() {
       if (!user) return
 
       let correct = 0
+      let incorrect = 0
+      let unanswered = 0
       const sqUpdates = simQuestions.map((sq, index) => {
         const userAnswer = answers[sq.question_id]
         const isCorrect = userAnswer === sq.question.correct_answer
-        if (isCorrect) correct++
+        if (userAnswer === undefined) {
+          unanswered++
+        } else if (isCorrect) {
+          correct++
+        } else {
+          incorrect++
+        }
         return {
           simulacrum_id: simulacrumId, question_id: sq.question_id,
           user_answer: userAnswer || null, is_correct: isCorrect,
@@ -178,18 +188,19 @@ export default function SimulacrumPage() {
         .upsert(sqUpdates, { onConflict: 'simulacrum_id,question_id', ignoreDuplicates: false })
 
       if (upsertErr) {
+        console.error('Upsert error, falling back to individual updates:', upsertErr)
         for (const u of sqUpdates) {
-          await supabase.from('simulacrum_questions')
+          const { error } = await supabase.from('simulacrum_questions')
             .update({ user_answer: u.user_answer, is_correct: u.is_correct, answered_at: u.answered_at, time_spent_seconds: u.time_spent_seconds })
             .eq('simulacrum_id', simulacrumId).eq('question_id', u.question_id)
+          if (error) console.error('Individual update error:', error)
         }
       }
 
       const score = simQuestions.length > 0 ? (correct / simQuestions.length) * 100 : 0
-      const unanswered = simQuestions.length - Object.keys(answers).length
       const { error: simErr } = await supabase.from('simulacrums').update({
         status: 'completed', score, correct_count: correct,
-        incorrect_count: simQuestions.length - correct - unanswered,
+        incorrect_count: incorrect,
         unanswered_count: unanswered, completed_at: new Date().toISOString(),
       }).eq('id', simulacrumId)
 
@@ -241,8 +252,33 @@ export default function SimulacrumPage() {
 
   // ── RESULTS VIEW ──
   if (currentSimulacrum.status === 'completed') {
+    const total = currentSimulacrum.total_questions
+    const correctCount = currentSimulacrum.correct_count ?? 0
+    const incorrectCount = currentSimulacrum.incorrect_count ?? 0
+    const unansweredCount = currentSimulacrum.unanswered_count ?? 0
+
+    const filteredQuestions = simQuestions.filter((sq) => {
+      if (reviewFilter === 'all') return true
+      if (reviewFilter === 'correct') return sq.is_correct === true
+      if (reviewFilter === 'incorrect') return sq.is_correct === false && sq.user_answer !== null
+      if (reviewFilter === 'unanswered') return sq.user_answer === null
+      return true
+    })
+
+    const getQuestionStatus = (sq: SimulacrumQuestion): 'correct' | 'incorrect' | 'unanswered' => {
+      if (sq.is_correct === true) return 'correct'
+      if (sq.user_answer === null) return 'unanswered'
+      return 'incorrect'
+    }
+
+    const statusConfig = {
+      correct: { color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', label: 'Correcta', icon: CheckCircle2 },
+      incorrect: { color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/30', label: 'Incorrecta', icon: XCircle },
+      unanswered: { color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', label: 'Sin responder', icon: AlertCircle },
+    }
+
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen pb-8">
         <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
           <div className="px-4 h-14 flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
@@ -250,80 +286,203 @@ export default function SimulacrumPage() {
                 <Brain className="w-4 h-4 text-white" />
               </div>
             </Link>
+            <h1 className="ml-3 font-semibold text-white text-sm">Resultados</h1>
           </div>
         </header>
 
         <main className="px-4 py-6 max-w-2xl mx-auto">
-          <GlassCard className="p-6 text-center mb-6 rounded-3xl animate-fade-in">
+          {/* Score Card */}
+          <GlassCard className="p-6 text-center mb-6 rounded-3xl animate-fade-in" hover={false}>
             <span className={cn(
-              'inline-block px-5 py-2 rounded-full text-2xl font-bold mb-4',
-              (currentSimulacrum.score ?? 0) >= 70 ? 'bg-accent-emerald/10 text-accent-emerald' :
-              (currentSimulacrum.score ?? 0) >= 50 ? 'bg-accent-amber/10 text-accent-amber' :
+              'inline-block px-5 py-2 rounded-full text-2xl font-bold mb-3',
+              (currentSimulacrum.score ?? 0) >= 70 ? 'bg-emerald-500/10 text-emerald-400' :
+              (currentSimulacrum.score ?? 0) >= 50 ? 'bg-amber-500/10 text-amber-400' :
               'bg-red-500/10 text-red-400'
             )}>
               {currentSimulacrum.score?.toFixed(1)}%
             </span>
-            <h2 className="text-xl font-bold text-white mb-4">{currentSimulacrum.name}</h2>
-            <div className="flex justify-center gap-4 text-sm text-blue-200/60 mb-6">
-              <span className="flex items-center gap-1"><CheckCircle2 className="w-4 h-4 text-accent-emerald" /> {currentSimulacrum.correct_count} correctas</span>
-              <span className="flex items-center gap-1"><XCircle className="w-4 h-4 text-red-400" /> {currentSimulacrum.incorrect_count} incorrectas</span>
-              <span className="flex items-center gap-1"><AlertCircle className="w-4 h-4 text-accent-amber" /> {currentSimulacrum.unanswered_count} sin responder</span>
+            <h2 className="text-xl font-bold text-white mb-5">{currentSimulacrum.name}</h2>
+
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-3">
+                <div className="text-2xl font-bold text-emerald-400">{correctCount}</div>
+                <div className="text-xs text-emerald-400/70 mt-0.5">Correctas</div>
+              </div>
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-3">
+                <div className="text-2xl font-bold text-red-400">{incorrectCount}</div>
+                <div className="text-xs text-red-400/70 mt-0.5">Incorrectas</div>
+              </div>
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-3">
+                <div className="text-2xl font-bold text-amber-400">{unansweredCount}</div>
+                <div className="text-xs text-amber-400/70 mt-0.5">Sin responder</div>
+              </div>
             </div>
+
+            {/* Progress bar */}
+            <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden mb-5">
+              <div className="h-full flex">
+                <div className="bg-emerald-500 transition-all" style={{ width: `${total > 0 ? (correctCount / total) * 100 : 0}%` }} />
+                <div className="bg-red-500 transition-all" style={{ width: `${total > 0 ? (incorrectCount / total) * 100 : 0}%` }} />
+                <div className="bg-amber-500 transition-all" style={{ width: `${total > 0 ? (unansweredCount / total) * 100 : 0}%` }} />
+              </div>
+            </div>
+
             <div className="flex gap-3 justify-center">
               <Link href="/dashboard" className="btn-secondary text-sm"><Home className="w-4 h-4" /> Dashboard</Link>
-              <Link href="/practice" className="btn-primary text-sm"><Play className="w-4 h-4" /> Nuevo</Link>
+              <Link href="/practice" className="btn-primary text-sm"><Play className="w-4 h-4" /> Nuevo simulacro</Link>
             </div>
           </GlassCard>
 
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+            <Filter className="w-4 h-4 text-blue-300/40 flex-shrink-0" />
+            {([
+              { key: 'all' as const, label: 'Todas', count: total },
+              { key: 'correct' as const, label: 'Correctas', count: correctCount },
+              { key: 'incorrect' as const, label: 'Incorrectas', count: incorrectCount },
+              { key: 'unanswered' as const, label: 'Sin responder', count: unansweredCount },
+            ]).map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setReviewFilter(tab.key)}
+                className={cn(
+                  'px-3 py-1.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap flex-shrink-0',
+                  reviewFilter === tab.key
+                    ? 'bg-primary/15 text-primary border border-primary/30'
+                    : 'bg-white/[0.04] text-blue-300/50 border border-white/[0.06] hover:bg-white/[0.06]'
+                )}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+
+          {/* Question Review */}
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Brain className="w-5 h-5 text-primary" /> Revisión
+            <Eye className="w-5 h-5 text-primary" /> Revisión detallada
           </h3>
 
           <div className="space-y-4">
-            {simQuestions.map((sq) => {
-              const isCorrect = sq.is_correct
+            {filteredQuestions.map((sq, idx) => {
+              const status = getQuestionStatus(sq)
+              const config = statusConfig[status]
+              const StatusIcon = config.icon
               const userAnswer = sq.user_answer
               const correctAnswer = sq.question.correct_answer
+              const isExpanded = expandedExplanation[sq.id] ?? false
+
               return (
-                <GlassCard key={sq.id} className="p-4 rounded-3xl">
-                  <div className="flex items-center gap-2 text-xs mb-3 flex-wrap">
-                    <span className={cn('px-2 py-0.5 rounded-full font-medium', getDifficultyColor(sq.question.difficulty))}>{sq.question.difficulty}</span>
-                    <span className="px-2 py-0.5 rounded-full font-medium bg-primary/10 text-primary">{sq.question.subtopic.area.name}</span>
-                    {isCorrect === true && <CheckCircle2 className="w-4 h-4 text-accent-emerald" />}
-                    {isCorrect === false && <XCircle className="w-4 h-4 text-red-400" />}
-                    {userAnswer === null && <AlertCircle className="w-4 h-4 text-accent-amber" />}
+                <div
+                  key={sq.id}
+                  className={cn(
+                    'rounded-3xl border-2 overflow-hidden transition-all',
+                    config.border, config.bg
+                  )}
+                >
+                  {/* Status header */}
+                  <div className={cn('px-4 py-2.5 flex items-center gap-2', config.bg)}>
+                    <StatusIcon className={cn('w-4 h-4', config.color)} />
+                    <span className={cn('text-xs font-bold uppercase tracking-wide', config.color)}>
+                      {config.label}
+                    </span>
+                    <span className="text-xs text-blue-300/40 ml-auto">#{idx + 1}</span>
                   </div>
-                  <p className="text-white text-sm mb-3 leading-relaxed">{sq.question.statement}</p>
-                  <div className="space-y-2 mb-3">
-                    {Object.entries(sq.question.options).map(([key, value]) => (
-                      <div key={key} className={cn(
-                        'flex items-center gap-3 p-2.5 rounded-xl text-sm',
-                        key === correctAnswer ? 'bg-accent-emerald/10 border border-accent-emerald/30' :
-                        key === userAnswer ? 'bg-red-500/10 border border-red-500/30' :
-                        'bg-white/[0.03] border border-white/[0.06]'
-                      )}>
-                        <div className={cn(
-                          'w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0',
-                          key === correctAnswer ? 'bg-accent-emerald text-white' :
-                          key === userAnswer ? 'bg-red-500 text-white' :
-                          'bg-white/[0.08] text-blue-200/60'
-                        )}>{key}</div>
-                        <span className="text-blue-100 flex-1">{value}</span>
-                        {key === correctAnswer && <CheckCircle2 className="w-4 h-4 text-accent-emerald" />}
-                        {key === userAnswer && key !== correctAnswer && <XCircle className="w-4 h-4 text-red-400" />}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="glass p-3 rounded-xl border-l-4 border-primary">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Brain className="w-3.5 h-3.5 text-primary" />
-                      <span className="font-medium text-white text-xs">Explicación</span>
+
+                  <div className="p-4">
+                    {/* Tags */}
+                    <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                      <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium', getDifficultyColor(sq.question.difficulty))}>
+                        {sq.question.difficulty}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
+                        {sq.question.subtopic.area.name}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/[0.04] text-blue-200/50">
+                        {sq.question.subtopic.name}
+                      </span>
                     </div>
-                    <p className="text-blue-200/70 text-xs leading-relaxed">{sq.question.explanation}</p>
+
+                    {/* Statement */}
+                    <p className="text-sm text-white mb-3 leading-relaxed">{sq.question.statement}</p>
+
+                    {/* Options */}
+                    <div className="space-y-1.5 mb-3">
+                      {Object.entries(sq.question.options).map(([key, value]) => {
+                        const isCorrectOpt = key === correctAnswer
+                        const isUserOpt = key === userAnswer
+                        const isWrongUser = isUserOpt && !isCorrectOpt
+
+                        return (
+                          <div key={key} className={cn(
+                            'flex items-start gap-2.5 p-2.5 rounded-xl text-sm border transition-all',
+                            isCorrectOpt ? 'bg-emerald-500/10 border-emerald-500/30' :
+                            isWrongUser ? 'bg-red-500/10 border-red-500/30' :
+                            'bg-white/[0.02] border-white/[0.04]'
+                          )}>
+                            <div className={cn(
+                              'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5',
+                              isCorrectOpt ? 'bg-emerald-500 text-white' :
+                              isWrongUser ? 'bg-red-500 text-white' :
+                              'bg-white/[0.06] text-blue-200/50'
+                            )}>{key}</div>
+                            <span className={cn(
+                              'flex-1 leading-snug',
+                              isCorrectOpt ? 'text-emerald-300' :
+                              isWrongUser ? 'text-red-300' :
+                              'text-blue-200/50'
+                            )}>{value}</span>
+                            <div className="flex-shrink-0 mt-0.5">
+                              {isCorrectOpt && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                              {isWrongUser && <XCircle className="w-4 h-4 text-red-400" />}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    {/* Your answer label */}
+                    {status === 'correct' && (
+                      <div className="text-xs text-emerald-400/80 mb-2">
+                        Tu respuesta: <span className="font-bold">{userAnswer}</span> — Correcta
+                      </div>
+                    )}
+                    {status === 'incorrect' && (
+                      <div className="text-xs text-red-400/80 mb-2">
+                        Tu respuesta: <span className="font-bold">{userAnswer}</span> — La correcta era <span className="font-bold text-emerald-400">{correctAnswer}</span>
+                      </div>
+                    )}
+                    {status === 'unanswered' && (
+                      <div className="text-xs text-amber-400/80 mb-2">
+                        No respondiste — Respuesta correcta: <span className="font-bold text-emerald-400">{correctAnswer}</span>
+                      </div>
+                    )}
+
+                    {/* Explanation toggle */}
+                    <button
+                      onClick={() => setExpandedExplanation(prev => ({ ...prev, [sq.id]: !isExpanded }))}
+                      className="flex items-center gap-1.5 text-xs font-medium text-primary/80 hover:text-primary transition-colors"
+                    >
+                      <Brain className="w-3.5 h-3.5" />
+                      {isExpanded ? 'Ocultar explicación' : 'Ver explicación'}
+                      <ChevronRight className={cn('w-3 h-3 transition-transform', isExpanded && 'rotate-90')} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="mt-2 glass p-3 rounded-xl border-l-4 border-primary">
+                        <p className="text-blue-200/70 text-xs leading-relaxed">{sq.question.explanation}</p>
+                      </div>
+                    )}
                   </div>
-                </GlassCard>
+                </div>
               )
             })}
+
+            {filteredQuestions.length === 0 && (
+              <div className="text-center py-12 text-blue-300/40">
+                <AlertCircle className="w-8 h-8 mx-auto mb-3" />
+                <p className="text-sm">No hay preguntas en esta categoría</p>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -332,38 +491,36 @@ export default function SimulacrumPage() {
 
   // ── ACTIVE SIMULACRUM ──
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-[100dvh] flex flex-col bg-deep-950">
       {/* Header */}
       <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
-        <div className="px-3 sm:px-4">
-          <div className="flex items-center justify-between h-14">
+        <div className="px-4">
+          <div className="flex items-center justify-between h-12">
             <Link href="/dashboard" className="flex items-center gap-2 flex-shrink-0">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
-                <Brain className="w-4 h-4 text-white" />
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+                <Brain className="w-3.5 h-3.5 text-white" />
               </div>
             </Link>
-            <div className="flex-1 min-w-0 mx-3">
-              <h1 className="font-semibold text-white text-sm truncate">{currentSimulacrum.name}</h1>
-              <p className="text-xs text-blue-300/40">{currentQuestionIndex + 1} de {simQuestions.length}</p>
+            <div className="flex-1 min-w-0 mx-3 text-center">
+              <h1 className="font-semibold text-white text-xs truncate">{currentSimulacrum.name}</h1>
             </div>
             <div className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-sm font-bold flex-shrink-0',
+              'flex items-center gap-1 px-2 py-1 rounded-lg font-mono text-xs font-bold flex-shrink-0',
               timeRemaining <= 300 ? 'bg-red-500/10 text-red-400 animate-pulse' : 'bg-primary/10 text-primary'
             )}>
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3.5 h-3.5" />
               <span>{formatTime(timeRemaining)}</span>
             </div>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="h-1 bg-white/[0.04]">
+        <div className="h-0.5 bg-white/[0.04]">
           <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress.percentage}%` }} />
         </div>
       </header>
 
-      {/* Question navigator - horizontal scroll */}
-      <div className="px-3 sm:px-4 py-2 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-1.5 min-w-max">
+      {/* Question navigator */}
+      <div className="px-4 py-2 overflow-x-auto scrollbar-hide border-b border-white/[0.04]">
+        <div className="flex gap-1 min-w-max justify-center">
           {simQuestions.map((sq, index) => {
             const isCurrent = index === currentQuestionIndex
             const isAnswered = !!answers[sq.question_id]
@@ -372,9 +529,9 @@ export default function SimulacrumPage() {
                 key={sq.id}
                 onClick={() => setCurrentQuestionIndex(index)}
                 className={cn(
-                  'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-all flex-shrink-0',
-                  isCurrent ? 'ring-2 ring-primary bg-primary text-white' :
-                  isAnswered ? 'bg-primary/15 text-primary' :
+                  'w-7 h-7 rounded-md flex items-center justify-center text-[10px] font-medium transition-all flex-shrink-0',
+                  isCurrent ? 'ring-2 ring-primary bg-primary text-white scale-110' :
+                  isAnswered ? 'bg-primary/20 text-primary' :
                   'bg-white/[0.04] text-blue-300/40'
                 )}
               >
@@ -385,30 +542,27 @@ export default function SimulacrumPage() {
         </div>
       </div>
 
-      {/* Question + Options - scrollable */}
-      <main className="flex-1 overflow-y-auto px-3 sm:px-4 py-3">
+      {/* Question + Options */}
+      <main className="flex-1 overflow-y-auto px-4 py-4">
         {currentQuestion && (
-          <div className="glass rounded-3xl p-4 sm:p-5 animate-slide-up">
+          <div key={currentQuestion.id} className="animate-slide-up">
             {/* Tags */}
             <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-              <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium', getDifficultyColor(currentQuestion.question.difficulty))}>
+              <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-medium', getDifficultyColor(currentQuestion.question.difficulty))}>
                 {currentQuestion.question.difficulty}
               </span>
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary/10 text-primary">
                 {currentQuestion.question.subtopic.area.name}
-              </span>
-              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-white/[0.04] text-blue-200/60">
-                {currentQuestion.question.subtopic.name}
               </span>
             </div>
 
             {/* Statement */}
-            <p className="text-base sm:text-lg font-medium text-white mb-5 leading-relaxed">
+            <h2 className="text-base font-medium text-white mb-4 leading-relaxed">
               {currentQuestion.question.statement}
-            </p>
+            </h2>
 
             {/* Options */}
-            <div className="space-y-2.5 mb-4">
+            <div className="space-y-2">
               {Object.entries(currentQuestion.question.options).map(([key, value]) => {
                 const isSelected = answers[currentQuestion.question_id] === key
                 return (
@@ -416,19 +570,19 @@ export default function SimulacrumPage() {
                     key={key}
                     onClick={() => handleAnswer(currentQuestion.question_id, key)}
                     className={cn(
-                      'w-full flex items-center gap-3 p-3 sm:p-3.5 rounded-2xl text-left transition-all',
+                      'w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.98]',
                       isSelected
-                        ? 'bg-primary/10 border-2 border-primary'
-                        : 'bg-white/[0.03] border border-white/[0.06] hover:border-primary/25 hover:bg-primary/[0.03]'
+                        ? 'bg-primary/10 border-2 border-primary shadow-[0_0_16px_rgba(20,184,166,0.15)]'
+                        : 'bg-white/[0.03] border border-white/[0.06] active:bg-white/[0.06]'
                     )}
                   >
                     <div className={cn(
-                      'w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0',
+                      'w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0',
                       isSelected ? 'bg-primary text-white' : 'bg-white/[0.06] text-blue-200/60'
                     )}>
                       {key}
                     </div>
-                    <span className="text-white text-sm sm:text-base flex-1 leading-snug">{value}</span>
+                    <span className="text-white text-sm flex-1 leading-snug">{value}</span>
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />}
                   </button>
                 )
@@ -438,44 +592,50 @@ export default function SimulacrumPage() {
         )}
       </main>
 
-      {/* Bottom navigation - fixed */}
-      <div className="sticky bottom-0 glass border-t border-white/[0.08] px-3 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <GlassButton variant="ghost" onClick={handlePrev} disabled={currentQuestionIndex === 0} size="sm" className="!px-3">
+      {/* Bottom navigation */}
+      <div className="sticky bottom-0 glass border-t border-white/[0.08] px-4 py-3 safe-area-bottom">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handlePrev}
+            disabled={currentQuestionIndex === 0}
+            className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+          >
             <ChevronLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Anterior</span>
-          </GlassButton>
+            Anterior
+          </button>
 
-          <div className="flex items-center gap-1.5 text-xs text-blue-300/40">
-            <Flag className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{answers[currentQuestion?.question_id] ? 'Respondida' : 'Pendiente'}</span>
+          <div className="text-xs text-blue-300/30 font-medium">
+            {currentQuestionIndex + 1}/{simQuestions.length}
           </div>
 
-          <div className="flex items-center gap-2">
-            {currentQuestionIndex < simQuestions.length - 1 && (
-              <GlassButton variant="outline" onClick={handleNext} size="sm" className="!px-3">
-                <span className="hidden sm:inline">Saltar</span>
-                <ChevronRight className="w-4 h-4" />
-              </GlassButton>
-            )}
-
-            {currentQuestionIndex === simQuestions.length - 1 ? (
-              <GlassButton onClick={submitSimulacrum} disabled={submitting} size="sm" className="!px-4">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Finalizar <ArrowRight className="w-4 h-4" /></>}
-              </GlassButton>
-            ) : (
-              <GlassButton onClick={handleNext} size="sm" className="!px-4">
-                Siguiente <ChevronRight className="w-4 h-4" />
-              </GlassButton>
-            )}
-          </div>
+          {currentQuestionIndex === simQuestions.length - 1 ? (
+            <button
+              onClick={submitSimulacrum}
+              disabled={submitting}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-primary to-primary-600 text-white shadow-[0_4px_20px_rgba(20,184,166,0.35)] hover:shadow-[0_8px_30px_rgba(20,184,166,0.45)] disabled:opacity-40 transition-all active:scale-95"
+            >
+              {submitting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>Finalizar <ArrowRight className="w-4 h-4" /></>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={handleNext}
+              className="flex items-center gap-1 px-3 py-2.5 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 transition-all active:scale-95"
+            >
+              Siguiente
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Draft start */}
+      {/* Draft start overlay */}
       {!isActive && currentSimulacrum.status === 'draft' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-950/80 backdrop-blur-sm px-4">
-          <GlassCard className="p-6 sm:p-8 text-center rounded-3xl max-w-sm w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-950/80 backdrop-blur-sm px-6">
+          <GlassCard className="p-8 text-center rounded-3xl max-w-sm w-full" hover={false}>
             <Brain className="w-14 h-14 mx-auto mb-4 text-primary" />
             <h2 className="text-xl font-bold text-white mb-2">¿Listo para comenzar?</h2>
             <p className="text-sm text-blue-200/60 mb-6">
