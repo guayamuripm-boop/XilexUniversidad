@@ -93,7 +93,7 @@ export default function ProgressPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <GlassCard className="p-8 max-w-md w-full text-center">
+        <GlassCard className="p-8 max-w-md w-full text-center rounded-3xl">
           <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
           <h1 className="text-2xl font-bold text-white mb-2">Inicia sesión para ver tu progreso</h1>
           <Link href="/auth/login" className="btn-primary inline-flex items-center gap-2">
@@ -108,9 +108,9 @@ export default function ProgressPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass p-8 rounded-2xl text-center">
+        <div className="glass p-8 rounded-3xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-graphite-300">Cargando progreso...</p>
+          <p className="text-blue-200">Cargando progreso...</p>
         </div>
       </div>
     )
@@ -125,7 +125,7 @@ export default function ProgressPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/progress" className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
               </Link>
@@ -141,46 +141,46 @@ export default function ProgressPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Tu progreso por subtema</h1>
-          <p className="text-graphite-500">Análisis detallado de tu desempeño en cada área</p>
+          <p className="text-blue-300/40">Análisis detallado de tu desempeño en cada área</p>
         </div>
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Subtemas practicados</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Subtemas practicados</p>
             <p className="text-3xl font-bold text-white">{stats.total}</p>
           </GlassCard>
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Dominados</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Dominados</p>
             <p className="text-3xl font-bold text-accent-emerald">{stats.mastered}</p>
           </GlassCard>
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Competentes</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Competentes</p>
             <p className="text-3xl font-bold text-blue-400">{stats.proficient}</p>
           </GlassCard>
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Aprendiendo</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Aprendiendo</p>
             <p className="text-3xl font-bold text-accent-amber">{stats.learning}</p>
           </GlassCard>
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Principiantes</p>
-            <p className="text-3xl font-bold text-graphite-500">{stats.novice}</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Principiantes</p>
+            <p className="text-3xl font-bold text-blue-300/40">{stats.novice}</p>
           </GlassCard>
-          <GlassCard className="p-5">
-            <p className="text-sm text-graphite-500">Precisión promedio</p>
+          <GlassCard className="p-5 rounded-3xl">
+            <p className="text-sm text-blue-300/40">Precisión promedio</p>
             <p className="text-3xl font-bold text-primary">{stats.avgAccuracy.toFixed(1)}%</p>
           </GlassCard>
         </div>
 
         {/* Filters */}
-        <GlassCard className="p-5 mb-8">
+        <GlassCard className="p-5 mb-8 rounded-3xl">
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-graphite-400" />
+              <Filter className="w-4 h-4 text-blue-200/60" />
               <select
                 value={filterUni}
                 onChange={(e) => setFilterUni(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-3 py-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">Todas las universidades</option>
                 <option value="simadi">SIMADI (UCV)</option>
@@ -191,7 +191,7 @@ export default function ProgressPage() {
               <select
                 value={filterArea}
                 onChange={(e) => setFilterArea(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-3 py-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">Todas las áreas</option>
                 <option value="logico">Razonamiento Lógico</option>
@@ -203,7 +203,7 @@ export default function ProgressPage() {
               <select
                 value={filterMastery}
                 onChange={(e) => setFilterMastery(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                className="px-3 py-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="all">Todos los niveles</option>
                 <option value="mastered">Dominado</option>
@@ -216,11 +216,11 @@ export default function ProgressPage() {
         </GlassCard>
 
         {/* Progress Table */}
-        <GlassCard className="overflow-hidden">
+        <GlassCard className="rounded-3xl overflow-hidden">
           {filteredProgress.length === 0 ? (
             <div className="p-12 text-center">
-              <TrendingUp className="w-16 h-16 mx-auto mb-4 text-graphite-400" />
-              <p className="text-graphite-500 text-lg">
+              <TrendingUp className="w-16 h-16 mx-auto mb-4 text-blue-200/60" />
+              <p className="text-blue-300/40 text-lg">
                 {progress.length === 0
                   ? 'Aún no has practicado ningún subtema'
                   : 'No hay subtemas con los filtros seleccionados'}
@@ -235,12 +235,12 @@ export default function ProgressPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-white/[0.08]">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-graphite-500 uppercase tracking-wider">Subtema</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-graphite-500 uppercase tracking-wider">Universidad / Área</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-graphite-500 uppercase tracking-wider">Intentos</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-graphite-500 uppercase tracking-wider">Precisión</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-graphite-500 uppercase tracking-wider">Nivel</th>
-                    <th className="px-4 py-3 text-center text-xs font-semibold text-graphite-500 uppercase tracking-wider">Última práctica</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Subtema</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Universidad / Área</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Intentos</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Precisión</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Nivel</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-blue-300/40 uppercase tracking-wider">Última práctica</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.08]">
@@ -248,7 +248,7 @@ export default function ProgressPage() {
                     <tr key={p.id} className="hover:bg-white/[0.04]">
                       <td className="px-4 py-4">
                         <p className="font-medium text-white">{p.subtopic.name}</p>
-                        <p className="text-xs text-graphite-500">{p.area.name}</p>
+                        <p className="text-xs text-blue-300/40">{p.area.name}</p>
                       </td>
                       <td className="px-4 py-4">
                         <span className="px-2 py-0.5 text-xs rounded-full bg-primary/10 text-primary">
@@ -264,7 +264,7 @@ export default function ProgressPage() {
                               style={{ width: `${p.accuracy_rate}%` }}
                             />
                           </div>
-                          <p className="text-xs text-graphite-500 mt-1">{p.accuracy_rate.toFixed(1)}%</p>
+                          <p className="text-xs text-blue-300/40 mt-1">{p.accuracy_rate.toFixed(1)}%</p>
                         </div>
                       </td>
                       <td className="px-4 py-4 text-center">
@@ -272,7 +272,7 @@ export default function ProgressPage() {
                           {p.mastery_level}
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-center text-sm text-graphite-500">
+                      <td className="px-4 py-4 text-center text-sm text-blue-300/40">
                         {p.last_attempted_at
                           ? new Date(p.last_attempted_at).toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: 'numeric' })
                           : '—'}

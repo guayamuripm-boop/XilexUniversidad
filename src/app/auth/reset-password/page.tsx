@@ -58,12 +58,12 @@ function ResetPasswordContent() {
   if (!validToken) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 py-12">
-        <GlassCard className="p-8 max-w-md w-full text-center">
-          <div className="w-14 h-14 rounded-xl bg-accent-amber/10 flex items-center justify-center mx-auto mb-4">
+        <GlassCard className="p-8 max-w-md w-full text-center rounded-3xl">
+          <div className="w-14 h-14 rounded-2xl bg-accent-amber/10 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-7 h-7 text-accent-amber" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Enlace inválido o expirado</h1>
-          <p className="text-graphite-400 mb-6">
+          <p className="text-blue-200/60 mb-6">
             El enlace de restablecimiento no es válido o ha expirado.
           </p>
           <Link href="/auth/forgot-password" className="btn-primary inline-flex items-center gap-2">
@@ -78,24 +78,24 @@ function ResetPasswordContent() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <Link href="/auth/login" className="inline-flex items-center gap-2 mb-6 text-graphite-400 hover:text-primary transition-colors">
+        <Link href="/auth/login" className="inline-flex items-center gap-2 mb-6 text-blue-200/60 hover:text-primary transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Volver al login
         </Link>
 
-        <GlassCard className="p-8">
+        <GlassCard className="p-8 rounded-3xl">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Lock className="w-7 h-7 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Nueva contraseña</h1>
-            <p className="text-graphite-400">
+            <p className="text-blue-200/60">
               Ingresa tu nueva contraseña (mínimo 6 caracteres)
             </p>
           </div>
 
           {message && (
-            <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+            <div className={`mb-6 p-4 rounded-2xl flex items-center gap-3 ${
               message.type === 'success'
                 ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
                 : 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -111,11 +111,11 @@ function ResetPasswordContent() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-graphite-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
                 Nueva contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-graphite-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-300/40" />
                 <input
                   id="password"
                   name="password"
@@ -126,18 +126,18 @@ function ResetPasswordContent() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-graphite-500"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-blue-300/40"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-graphite-300 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-blue-200 mb-2">
                 Confirmar contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-graphite-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-300/40" />
                 <input
                   id="confirmPassword"
                   name="confirmPassword"
@@ -147,13 +147,13 @@ function ResetPasswordContent() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-graphite-500"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-blue-300/40"
                   placeholder="••••••••"
                 />
               </div>
             </div>
 
-            <GlassButton type="submit" disabled={loading} className="w-full" size="lg">
+            <GlassButton type="submit" disabled={loading} className="w-full rounded-2xl" size="lg">
               {loading ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@ function ResetPasswordContent() {
             </GlassButton>
           </form>
 
-          <p className="mt-6 text-center text-sm text-graphite-500">
+          <p className="mt-6 text-center text-sm text-blue-300/40">
             ¿Recordaste tu contraseña?{' '}
             <Link href="/auth/login" className="text-primary hover:underline font-medium">
               Iniciar sesión

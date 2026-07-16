@@ -4,45 +4,42 @@
 
 @layer base {
   :root {
-    --primary: #00b4d8;
-    --primary-dark: #0891b2;
-    --primary-light: #e0f7fa;
-    --graphite-950: #0f1117;
-    --graphite-925: #16181d;
-    --graphite-900: #1e2028;
-    --graphite-800: #3a3f4f;
-    --graphite-700: #434a5d;
-    --graphite-400: #858ea5;
-    --graphite-200: #d5d8e0;
+    --primary: #14b8a6;
+    --primary-dark: #0d9488;
+    --primary-light: #ccfbf1;
+    --deep-950: #0a1929;
+    --deep-925: #0f2740;
+    --deep-900: #112240;
+    --deep-800: #1a3352;
   }
 
   * {
-    @apply border-graphite-800;
+    @apply border-white/[0.08];
   }
 
   html {
-    @apply bg-graphite-950;
+    @apply bg-deep-950;
     color-scheme: dark;
   }
 
   body {
-    @apply bg-graphite-950 text-graphite-200 antialiased;
+    @apply bg-deep-950 text-blue-100 antialiased;
     background-image:
-      radial-gradient(ellipse at 20% 0%, rgba(0,180,216,0.07) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, rgba(52,211,153,0.04) 0%, transparent 50%),
-      linear-gradient(180deg, #0f1117 0%, #12141a 50%, #0f1117 100%);
+      radial-gradient(ellipse at 15% 0%, rgba(20,184,166,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 85% 100%, rgba(56,189,248,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(15,38,64,0.5) 0%, transparent 70%),
+      linear-gradient(180deg, #0a1929 0%, #0d2137 50%, #0a1929 100%);
     background-attachment: fixed;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-graphite-950;
+    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-deep-950;
   }
 
   ::selection {
-    @apply bg-primary/30 text-primary-300;
+    @apply bg-primary/30 text-primary-200;
   }
 
-  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -53,30 +50,29 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-graphite-700 rounded-full;
+    @apply bg-white/10 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-graphite-600;
+    @apply bg-white/20;
   }
 }
 
 @layer components {
-  /* Liquid Glass Card */
   .glass {
     @apply backdrop-blur-xl
-      bg-white/[0.04]
+      bg-white/[0.05]
       border border-white/[0.08]
       shadow-glass;
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
   }
 
   .glass-strong {
     @apply backdrop-blur-2xl
-      bg-white/[0.07]
+      bg-white/[0.08]
       border border-white/[0.1]
       shadow-glass-lg;
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.03) 100%);
   }
 
   .glass-subtle {
@@ -86,84 +82,81 @@
       shadow-glass-sm;
   }
 
-  .glass-dark {
-    @apply backdrop-blur-xl
-      bg-graphite-925/80
-      border border-white/[0.06]
-      shadow-glass;
-  }
-
-  /* Liquid Glass with glow on hover */
   .glass-glow {
     @apply glass transition-all duration-500;
   }
   .glass-glow:hover {
-    @apply border-primary/20 shadow-glow;
-    background-image: linear-gradient(135deg, rgba(0,180,216,0.06) 0%, rgba(255,255,255,0.02) 100%);
+    @apply border-primary/25 shadow-glow;
+    background-image: linear-gradient(135deg, rgba(20,184,166,0.08) 0%, rgba(255,255,255,0.03) 100%);
   }
 
-  /* Buttons */
+  .glass-ocean {
+    @apply glass transition-all duration-500;
+  }
+  .glass-ocean:hover {
+    @apply border-accent-sky/25 shadow-glow-ocean;
+    background-image: linear-gradient(135deg, rgba(56,189,248,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  }
+
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-semibold text-white rounded-xl
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-semibold text-white rounded-2xl
       bg-gradient-to-r from-primary to-primary-600
       hover:from-primary-600 hover:to-primary-700
-      shadow-[0_4px_14px_rgba(0,180,216,0.3)]
-      hover:shadow-[0_6px_20px_rgba(0,180,216,0.4)]
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
-      disabled:opacity-50 disabled:cursor-not-allowed
-      active:scale-[0.98];
+      shadow-[0_4px_20px_rgba(20,184,166,0.35)]
+      hover:shadow-[0_8px_30px_rgba(20,184,166,0.45)]
+      transition-all duration-300
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-deep-950
+      disabled:opacity-40 disabled:cursor-not-allowed
+      active:scale-[0.97]
+      hover:-translate-y-0.5;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary
-      bg-primary/10 border border-primary/20
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-primary
+      bg-primary/10 border border-primary/20 rounded-2xl
       hover:bg-primary/20 hover:border-primary/30
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
-      disabled:opacity-50 disabled:cursor-not-allowed;
+      transition-all duration-300
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-deep-950
+      disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary
-      border-2 border-primary/40
-      hover:bg-primary/10 hover:border-primary/60
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
-      disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium text-primary
+      border-2 border-primary/30 rounded-2xl
+      hover:bg-primary/10 hover:border-primary/50
+      transition-all duration-300
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-deep-950
+      disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-graphite-300
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-blue-200
       hover:bg-white/[0.06] hover:text-white
-      rounded-xl
-      transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950;
+      rounded-2xl
+      transition-all duration-300
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-deep-950;
   }
 
-  /* Inputs */
   .input-glass {
-    @apply w-full px-4 py-3 text-base text-graphite-100
-      bg-white/[0.04] backdrop-blur-sm
-      border border-white/[0.08]
-      rounded-xl
-      placeholder:text-graphite-500
-      transition-all duration-200
+    @apply w-full px-4 py-3.5 text-base text-blue-50
+      bg-white/[0.05] backdrop-blur-sm
+      border border-white/[0.08] rounded-2xl
+      placeholder:text-blue-300/40
+      transition-all duration-300
       focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30
-      focus:bg-white/[0.06]
-      disabled:opacity-50 disabled:cursor-not-allowed;
+      focus:bg-white/[0.07] focus:shadow-glow-sm
+      disabled:opacity-40 disabled:cursor-not-allowed;
   }
 
   .label-glass {
-    @apply block text-sm font-medium text-graphite-300 mb-1.5;
+    @apply block text-sm font-medium text-blue-200 mb-1.5;
   }
 
-  /* Card hover */
   .card-hover {
     @apply transition-all duration-300
       hover:shadow-glass-lg
-      hover:border-white/[0.12]
-      hover:bg-white/[0.06];
+      hover:border-white/[0.14]
+      hover:bg-white/[0.07];
   }
 
   .card-hover-glow {
@@ -200,17 +193,17 @@
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-12px); }
+    from { opacity: 0; transform: translateY(-16px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.96); }
+    from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
   }
 
@@ -221,22 +214,5 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
-  }
-
-  /* Glassmorphism gradient borders */
-  .gradient-border {
-    position: relative;
-  }
-  .gradient-border::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
   }
 }

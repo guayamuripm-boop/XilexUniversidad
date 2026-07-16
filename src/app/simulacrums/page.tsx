@@ -91,13 +91,13 @@ export default function SimulacrumsPage() {
       case 'draft':
         return {
           label: 'Borrador',
-          color: 'bg-white/[0.04] text-graphite-300',
+          color: 'bg-white/[0.04] text-blue-200',
           icon: Clock,
         }
       default:
         return {
           label: status,
-          color: 'bg-white/[0.04] text-graphite-300',
+          color: 'bg-white/[0.04] text-blue-200',
           icon: Clock,
         }
     }
@@ -106,9 +106,9 @@ export default function SimulacrumsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass p-8 rounded-2xl text-center">
+        <div className="glass p-8 rounded-3xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-graphite-300">Cargando simulacros...</p>
+          <p className="text-blue-200">Cargando simulacros...</p>
         </div>
       </div>
     )
@@ -121,7 +121,7 @@ export default function SimulacrumsPage() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-bold text-xl text-white">XILEX</span>
@@ -142,8 +142,8 @@ export default function SimulacrumsPage() {
               <h1 className="text-2xl sm:text-3xl font-bold text-white">
                 Mis <span className="text-primary">simulacros</span>
               </h1>
-              <p className="text-graphite-300 mt-1">
-                Historial completo de tus prácticas
+              <p className="text-blue-200 mt-1">
+                Historial completo de tus pr&aacute;cticas
               </p>
             </div>
             <Link href="/practice" className="btn-primary">
@@ -160,7 +160,7 @@ export default function SimulacrumsPage() {
                   key={f}
                   onClick={() => setFilter(f as any)}
                   className={cn(
-                    'px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2',
+                    'px-4 py-2 rounded-2xl text-sm font-medium transition-colors flex items-center gap-2',
                     filter === f
                       ? 'bg-primary text-white'
                       : 'bg-white/[0.04] border border-white/[0.08] hover:border-primary/50'
@@ -176,14 +176,14 @@ export default function SimulacrumsPage() {
 
         {filteredSimulacrums.length === 0 ? (
           <div className="text-center py-16">
-            <GlassCard className="p-12 max-w-md mx-auto">
-              <Brain className="w-20 h-20 mx-auto mb-6 text-graphite-400" />
+            <GlassCard className="p-12 max-w-md mx-auto rounded-3xl">
+              <Brain className="w-20 h-20 mx-auto mb-6 text-blue-200/60" />
               <h2 className="text-xl font-semibold text-white mb-3">
-                {simulacrums.length === 0 ? 'No has creado simulacros aún' : 'No hay simulacros con este filtro'}
+                {simulacrums.length === 0 ? 'No has creado simulacros a\u00fan' : 'No hay simulacros con este filtro'}
               </h2>
-              <p className="text-graphite-500 mb-6">
+              <p className="text-blue-300/40 mb-6">
                 {simulacrums.length === 0
-                  ? 'Crea tu primer simulacro para empezar a practicar y ver tu progreso aquí.'
+                  ? 'Crea tu primer simulacro para empezar a practicar y ver tu progreso aqu\u00ed.'
                   : 'Prueba con otro filtro o crea un nuevo simulacro.'}
               </p>
               <Link href="/practice" className="btn-primary inline-flex items-center gap-2">
@@ -204,15 +204,15 @@ export default function SimulacrumsPage() {
                 <Link
                   key={sim.id}
                   href={`/simulacrum/${sim.id}`}
-                  className="glass card-hover p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                  className="glass card-hover p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-3xl"
                 >
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0', info.color)}>
+                    <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0', info.color)}>
                       <StatusIcon className="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
                       <h3 className="font-semibold text-white truncate">{sim.name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-graphite-500 mt-1">
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-blue-300/40 mt-1">
                         <span className="flex items-center gap-1">
                           <Brain className="w-3.5 h-3.5" />
                           {sim.total_questions} preguntas
@@ -239,13 +239,13 @@ export default function SimulacrumsPage() {
                         <p className={cn('text-lg font-bold', sim.score! >= 70 ? 'text-accent-emerald' : sim.score! >= 50 ? 'text-accent-amber' : 'text-red-400')}>
                           {sim.score!.toFixed(1)}%
                         </p>
-                        <p className="text-xs text-graphite-500">
+                        <p className="text-xs text-blue-300/40">
                           {sim.correct_count}✓ {sim.incorrect_count}✗ {sim.unanswered_count}○
                         </p>
                       </div>
                     )}
 
-                    <ArrowRight className="w-5 h-5 text-graphite-400" />
+                    <ArrowRight className="w-5 h-5 text-blue-200/60" />
                   </div>
                 </Link>
               )

@@ -121,7 +121,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-graphite-400">
+            <span className="text-sm font-medium text-blue-200/60">
               Paso {step} de 2
             </span>
             <span className="text-sm font-medium text-primary">{progress}%</span>
@@ -136,7 +136,7 @@ export default function RegisterPage() {
 
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-2xl text-white">XILEX</span>
@@ -144,7 +144,7 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-bold text-white">
             {step === 1 ? 'Crear tu cuenta' : 'Elige tus universidades'}
           </h1>
-          <p className="text-graphite-400 mt-2">
+          <p className="text-blue-200/60 mt-2">
             {step === 1 
               ? 'Regístrate gratis y accede a práctica ilimitada'
               : 'Selecciona para qué pruebas te preparas (puedes cambiarlo después)'
@@ -152,16 +152,16 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <GlassCard className="p-6 sm:p-8 animate-fade-in">
+        <GlassCard className="p-6 sm:p-8 rounded-3xl animate-fade-in">
           {success && (
-            <div className="mb-6 flex items-center gap-2 text-accent-emerald bg-accent-emerald/10 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-accent-emerald bg-accent-emerald/10 p-3 rounded-2xl">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               <span>{success}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-500/10 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-500/10 p-3 rounded-2xl">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -238,19 +238,19 @@ export default function RegisterPage() {
                       type="button"
                       onClick={() => !uni.disabled && toggleUniversity(uni.code)}
                       disabled={uni.disabled}
-                      className={`w-full relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 ${
+                      className={`w-full relative p-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${
                         selectedUniversities.includes(uni.code)
                           ? 'border-primary bg-primary/10'
                           : 'border-white/[0.08] hover:border-primary/50'
                         } ${uni.disabled ? 'opacity-50 cursor-not-allowed' : ''}
                       `}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${uni.color}-900/30`}>
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center bg-${uni.color}-900/30`}>
                         <Brain className={`w-5 h-5 text-${uni.color}-400`} />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-white">{uni.name}</p>
-                        <p className="text-sm text-graphite-500">{uni.description}</p>
+                        <p className="text-sm text-blue-300/40">{uni.description}</p>
                       </div>
                       {selectedUniversities.includes(uni.code) && (
                         <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -273,14 +273,14 @@ export default function RegisterPage() {
                   variant="ghost"
                   onClick={() => setStep(1)}
                   disabled={loading}
-                  className="flex-1"
+                  className="flex-1 rounded-2xl"
                 >
                   Volver
                 </GlassButton>
               )}
               <GlassButton
                 type="submit"
-                className="flex-1"
+                className="flex-1 rounded-2xl"
                 size="lg"
                 disabled={loading}
               >
@@ -296,7 +296,7 @@ export default function RegisterPage() {
             </div>
           </form>
 
-          <p className="mt-6 text-center text-sm text-graphite-400">
+          <p className="mt-6 text-center text-sm text-blue-200/60">
             {step === 1 
               ? '¿Ya tienes cuenta? '
               : '¿Ya tienes cuenta? '
@@ -307,7 +307,7 @@ export default function RegisterPage() {
           </p>
         </GlassCard>
 
-        <p className="mt-6 text-center text-xs text-graphite-500">
+        <p className="mt-6 text-center text-xs text-blue-300/40">
           Al registrarte, aceptas nuestros{' '}
           <Link href="/terms" className="underline hover:text-primary">Términos</Link>{' '}
           y{' '}

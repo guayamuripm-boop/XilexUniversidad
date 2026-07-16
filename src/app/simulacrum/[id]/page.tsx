@@ -90,7 +90,6 @@ export default function SimulacrumPage() {
 
   const supabase = createClient()
 
-  // Load simulacrum data
   useEffect(() => {
     const loadSimulacrum = async () => {
       try {
@@ -128,7 +127,6 @@ export default function SimulacrumPage() {
 
         setSimulacrum(simData, sortedQuestions)
         
-        // If already in progress, set timer
         if (simData.status === 'in_progress' && simData.started_at) {
           const elapsed = Math.floor((Date.now() - new Date(simData.started_at).getTime()) / 1000)
           const total = simData.time_limit_minutes * 60
@@ -146,7 +144,6 @@ export default function SimulacrumPage() {
     loadSimulacrum()
   }, [simulacrumId, setSimulacrum, setTimeRemaining, setActive, router, supabase])
 
-  // Timer
   useEffect(() => {
     if (!isActive || timeRemaining <= 0) return
 
@@ -214,7 +211,6 @@ export default function SimulacrumPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Calculate score
       let correct = 0
       const sqUpdates = simQuestions.map((sq, index) => {
         const userAnswer = answers[sq.question_id]
@@ -224,62 +220,75 @@ export default function SimulacrumPage() {
         return {
           simulacrum_id: simulacrumId,
           question_id: sq.question_id,
-          user_answer: userAnswer,
+          user_answer: userAnswer || null,
           is_correct: isCorrect,
           answered_at: userAnswer ? new Date().toISOString() : null,
-          time_spent_seconds: 0, // Could calculate per question
+          time_spent_seconds: 0,
           order_index: index,
         }
       })
 
-      // Update each question individually
-      for (const update of sqUpdates) {
-        const { error: sqError } = await supabase
-          .from('simulacrum_questions')
-          .update({
-            user_answer: update.user_answer,
-            is_correct: update.is_correct,
-            answered_at: update.answered_at,
-            time_spent_seconds: update.time_spent_seconds,
-          })
-          .eq('simulacrum_id', simulacrumId)
-          .eq('question_id', update.question_id)
+      const { error: upsertErr } = await supabase
+        .from('simulacrum_questions')
+        .upsert(sqUpdates, {
+          onConflict: 'simulacrum_id,question_id',
+          ignoreDuplicates: false,
+        })
 
-        if (sqError) throw sqError
+      if (upsertErr) {
+        console.error('Upsert error:', upsertErr)
+        for (const update of sqUpdates) {
+          const { error } = await supabase
+            .from('simulacrum_questions')
+            .update({
+              user_answer: update.user_answer,
+              is_correct: update.is_correct,
+              answered_at: update.answered_at,
+              time_spent_seconds: update.time_spent_seconds,
+            })
+            .eq('simulacrum_id', simulacrumId)
+            .eq('question_id', update.question_id)
+          if (error) console.error('Individual update error:', error)
+        }
       }
 
-      // Update simulacrum
       const score = simQuestions.length > 0 ? (correct / simQuestions.length) * 100 : 0
-      await supabase
+      const unanswered = simQuestions.length - Object.keys(answers).length
+      const { error: simErr } = await supabase
         .from('simulacrums')
         .update({
           status: 'completed',
           score,
           correct_count: correct,
-          incorrect_count: simQuestions.length - correct - (simQuestions.length - Object.keys(answers).length),
-          unanswered_count: simQuestions.length - Object.keys(answers).length,
+          incorrect_count: simQuestions.length - correct - unanswered,
+          unanswered_count: unanswered,
           completed_at: new Date().toISOString(),
         })
         .eq('id', simulacrumId)
 
-      // Update user progress for each question
+      if (simErr) {
+        console.error('Simulacrum update error:', simErr)
+        throw simErr
+      }
+
       for (const sq of simQuestions) {
         const userAnswer = answers[sq.question_id]
         if (userAnswer) {
-          await supabase.rpc('update_user_progress', {
+          const { error: rpcErr } = await supabase.rpc('update_user_progress', {
             p_user_id: user.id,
             p_question_id: sq.question_id,
             p_is_correct: userAnswer === sq.question.correct_answer,
             p_time_spent_seconds: 0,
           })
+          if (rpcErr) console.error('Progress update error:', rpcErr)
         }
       }
 
-      router.push(`/simulacrum/${simulacrumId}`)
+      reset()
+      window.location.href = `/simulacrum/${simulacrumId}`
     } catch (err) {
       console.error('Error submitting simulacrum:', err)
       alert('Error al enviar el simulacro. Intenta de nuevo.')
-    } finally {
       setSubmitting(false)
     }
   }
@@ -287,9 +296,9 @@ export default function SimulacrumPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass p-8 rounded-2xl text-center">
+        <div className="glass p-8 rounded-3xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-graphite-400">Cargando simulacro...</p>
+          <p className="text-blue-200/60">Cargando simulacro...</p>
         </div>
       </div>
     )
@@ -298,7 +307,7 @@ export default function SimulacrumPage() {
   if (!currentSimulacrum) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <GlassCard className="p-8 max-w-md w-full text-center">
+        <GlassCard className="p-8 max-w-md w-full text-center rounded-3xl">
           <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
           <h1 className="text-2xl font-bold text-white mb-2">Simulacro no encontrado</h1>
           <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
@@ -310,14 +319,13 @@ export default function SimulacrumPage() {
     )
   }
 
-  // Results view
   if (currentSimulacrum.status === 'completed') {
     return (
       <div className="min-h-screen">
         <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
             </Link>
@@ -325,8 +333,7 @@ export default function SimulacrumPage() {
         </header>
 
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Score Card */}
-          <GlassCard className="p-8 text-center mb-8 animate-fade-in">
+          <GlassCard className="p-8 text-center mb-8 rounded-3xl animate-fade-in">
             <div className="mb-4">
               <span className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-full text-lg font-bold',
@@ -340,7 +347,7 @@ export default function SimulacrumPage() {
               </span>
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">{currentSimulacrum.name}</h2>
-            <div className="flex items-center justify-center gap-6 text-sm text-graphite-400">
+            <div className="flex items-center justify-center gap-6 text-sm text-blue-200/60">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 {currentSimulacrum.correct_count} correctas
@@ -366,7 +373,6 @@ export default function SimulacrumPage() {
             </div>
           </GlassCard>
 
-          {/* Question Review */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-primary" />
@@ -379,7 +385,7 @@ export default function SimulacrumPage() {
               const correctAnswer = sq.question.correct_answer
               
               return (
-                <GlassCard key={sq.id} className="p-5 overflow-hidden">
+                <GlassCard key={sq.id} className="p-5 rounded-3xl overflow-hidden">
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 text-sm mb-2">
@@ -410,13 +416,12 @@ export default function SimulacrumPage() {
                     </div>
                   </div>
 
-                  {/* Options */}
                   <div className="space-y-2 mb-4">
                     {Object.entries(sq.question.options).map(([key, value]) => (
                       <div 
                         key={key} 
                         className={cn(
-                          'flex items-center gap-3 p-3 rounded-xl transition-colors',
+                          'flex items-center gap-3 p-3 rounded-2xl transition-colors',
                           key === correctAnswer 
                             ? 'bg-accent-emerald/10 border border-accent-emerald/30' :
                             key === userAnswer
@@ -430,7 +435,7 @@ export default function SimulacrumPage() {
                             ? 'bg-emerald-500 text-white' :
                             key === userAnswer
                             ? 'bg-red-500 text-white' :
-                            'bg-white/[0.08] text-graphite-400'
+                            'bg-white/[0.08] text-blue-200/60'
                         )}>
                           {key}
                         </div>
@@ -441,13 +446,12 @@ export default function SimulacrumPage() {
                     ))}
                   </div>
 
-                  {/* Explanation */}
-                  <div className="glass p-4 rounded-xl border-l-4 border-primary">
+                  <div className="glass p-4 rounded-2xl border-l-4 border-primary">
                     <div className="flex items-center gap-2 mb-2">
                       <Brain className="w-4 h-4 text-primary" />
                       <span className="font-medium text-white">Explicación</span>
                     </div>
-                    <p className="text-graphite-300 text-sm leading-relaxed">
+                    <p className="text-blue-200 text-sm leading-relaxed">
                       {sq.question.explanation}
                     </p>
                   </div>
@@ -460,30 +464,27 @@ export default function SimulacrumPage() {
     )
   }
 
-  // Active / Draft Simulacrum View
   return (
     <div className="min-h-screen">
-      {/* Header with Timer */}
       <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
               </Link>
               <div>
                 <h1 className="font-semibold text-white text-sm">{currentSimulacrum.name}</h1>
-                <p className="text-xs text-graphite-500">
+                <p className="text-xs text-blue-300/40">
                   Pregunta {currentQuestionIndex + 1} de {simQuestions.length}
                 </p>
               </div>
             </div>
 
-            {/* Timer */}
             <div className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold transition-colors',
+              'flex items-center gap-2 px-4 py-2 rounded-2xl font-mono text-lg font-bold transition-colors',
               timeRemaining <= 300 
                 ? 'bg-red-500/10 text-red-400 animate-pulse' 
                 : 'bg-primary/10 text-primary'
@@ -492,7 +493,6 @@ export default function SimulacrumPage() {
               <span>{formatTime(timeRemaining)}</span>
             </div>
 
-            {/* Progress */}
             <div className="hidden md:block w-48">
               <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
                 <div 
@@ -500,7 +500,7 @@ export default function SimulacrumPage() {
                   style={{ width: `${progress.percentage}%` }}
                 />
               </div>
-              <p className="text-xs text-graphite-500 text-right mt-1">
+              <p className="text-xs text-blue-300/40 text-right mt-1">
                 {progress.answered} / {progress.total} respondidas
               </p>
             </div>
@@ -509,7 +509,6 @@ export default function SimulacrumPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Question Navigator */}
         <div className="mb-6 overflow-x-auto pb-2">
           <div className="flex gap-2 min-w-max">
             {simQuestions.map((sq, index) => {
@@ -525,7 +524,7 @@ export default function SimulacrumPage() {
                     setQuestionStartTime(Date.now())
                   }}
                   className={cn(
-                    'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium transition-all',
+                    'w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-medium transition-all',
                     isCurrent 
                       ? 'ring-2 ring-primary ring-offset-2 bg-primary text-white' :
                       isCorrect === true
@@ -534,7 +533,7 @@ export default function SimulacrumPage() {
                       ? 'bg-red-500/10 text-red-400' :
                       isAnswered
                       ? 'bg-primary/10 text-primary' :
-                      'bg-white/[0.04] text-graphite-500 hover:bg-white/[0.08]'
+                      'bg-white/[0.04] text-blue-300/40 hover:bg-white/[0.08]'
                   )}
                   title={`Pregunta ${index + 1}`}
                 >
@@ -547,10 +546,8 @@ export default function SimulacrumPage() {
           </div>
         </div>
 
-        {/* Question Card */}
         {currentQuestion && (
-          <GlassCard className="p-6 animate-slide-up">
-            {/* Subtopic badges */}
+          <GlassCard className="p-6 rounded-3xl animate-slide-up">
             <div className="flex items-center gap-2 mb-4">
               <span className={cn(
                 'px-2 py-1 rounded-full text-xs font-medium',
@@ -561,17 +558,15 @@ export default function SimulacrumPage() {
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                 {currentQuestion.question.subtopic.area.name}
               </span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/[0.04] text-graphite-400">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/[0.04] text-blue-200/60">
                 {currentQuestion.question.subtopic.name}
               </span>
             </div>
 
-            {/* Question Statement */}
             <p className="text-xl font-medium text-white mb-6 leading-relaxed">
               {currentQuestion.question.statement}
             </p>
 
-            {/* Options */}
             <div className="space-y-3 mb-6">
               {Object.entries(currentQuestion.question.options).map(([key, value]) => {
                 const isSelected = answers[currentQuestion.question_id] === key
@@ -580,7 +575,7 @@ export default function SimulacrumPage() {
                     key={key}
                     onClick={() => handleAnswer(currentQuestion.question_id, key)}
                     className={cn(
-                      'w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all',
+                      'w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all',
                       isSelected
                         ? 'bg-primary/10 border-2 border-primary'
                         : 'bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/[0.04]'
@@ -590,7 +585,7 @@ export default function SimulacrumPage() {
                       'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0',
                       isSelected
                         ? 'bg-primary text-white'
-                        : 'bg-white/[0.08] text-graphite-400'
+                        : 'bg-white/[0.08] text-blue-200/60'
                     )}>
                       {key}
                     </div>
@@ -601,7 +596,6 @@ export default function SimulacrumPage() {
               })}
             </div>
 
-            {/* Navigation */}
             <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
               <GlassButton 
                 variant="ghost" 
@@ -613,7 +607,7 @@ export default function SimulacrumPage() {
                 Anterior
               </GlassButton>
 
-              <div className="flex items-center gap-2 text-sm text-graphite-500">
+              <div className="flex items-center gap-2 text-sm text-blue-300/40">
                 <Flag className="w-4 h-4" />
                 {answers[currentQuestion.question_id] ? 'Respondida' : 'Pendiente'}
               </div>
@@ -665,22 +659,21 @@ export default function SimulacrumPage() {
           </GlassCard>
         )}
 
-        {/* Start Button (if draft) */}
         {!isActive && currentSimulacrum.status === 'draft' && (
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-            <GlassCard className="p-8 text-center">
+            <GlassCard className="p-8 text-center rounded-3xl">
               <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
               <h2 className="text-2xl font-bold text-white mb-2">
                 ¿Listo para comenzar?
               </h2>
-              <p className="text-graphite-400 mb-6 max-w-md mx-auto">
+              <p className="text-blue-200/60 mb-6 max-w-md mx-auto">
                 Este simulacro tiene {currentSimulacrum.total_questions} preguntas y un límite de {currentSimulacrum.time_limit_minutes} minutos. 
                 Una vez iniciado, el tiempo comenzará a correr.
               </p>
               <GlassButton 
                 onClick={startSimulacrum} 
                 size="lg"
-                className="w-full max-w-xs"
+                className="w-full max-w-xs rounded-2xl"
               >
                 <Play className="w-5 h-5" />
                 Iniciar simulacro

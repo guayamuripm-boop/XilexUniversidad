@@ -35,24 +35,24 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <Link href="/auth/login" className="inline-flex items-center gap-2 mb-6 text-graphite-400 hover:text-primary transition-colors">
+        <Link href="/auth/login" className="inline-flex items-center gap-2 mb-6 text-blue-200/60 hover:text-primary transition-colors">
           <ArrowLeft className="w-4 h-4" />
           Volver al login
         </Link>
 
-        <GlassCard className="p-8">
+        <GlassCard className="p-8 rounded-3xl">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Mail className="w-7 h-7 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Restablecer contraseña</h1>
-            <p className="text-graphite-400">
+            <p className="text-blue-200/60">
               Ingresa tu email y te enviaremos un enlace para crear una nueva contraseña
             </p>
           </div>
 
           {message && (
-            <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
+            <div className={`mb-6 p-4 rounded-2xl flex items-center gap-3 ${
               message.type === 'success'
                 ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
                 : 'bg-red-500/10 text-red-400 border border-red-500/20'
@@ -68,11 +68,11 @@ export default function ForgotPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-graphite-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-graphite-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-300/40" />
                 <input
                   id="email"
                   name="email"
@@ -82,13 +82,13 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-graphite-500"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/[0.08] bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white placeholder-blue-300/40"
                   placeholder="tu@email.com"
                 />
               </div>
             </div>
 
-            <GlassButton type="submit" disabled={loading} className="w-full" size="lg">
+            <GlassButton type="submit" disabled={loading} className="w-full rounded-2xl" size="lg">
               {loading ? (
                 <>
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
             </GlassButton>
           </form>
 
-          <p className="mt-6 text-center text-sm text-graphite-500">
+          <p className="mt-6 text-center text-sm text-blue-300/40">
             ¿Recordaste tu contraseña?{' '}
             <Link href="/auth/login" className="text-primary hover:underline font-medium">
               Iniciar sesión

@@ -176,9 +176,9 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="glass p-8 rounded-2xl text-center">
+        <div className="glass p-8 rounded-3xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-graphite-400">Cargando dashboard...</p>
+          <p className="text-blue-200/60">Cargando dashboard...</p>
         </div>
       </div>
     )
@@ -187,10 +187,10 @@ export default function DashboardPage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4">
-        <GlassCard className="p-8 max-w-md w-full text-center">
+        <GlassCard className="p-8 max-w-md w-full text-center rounded-3xl">
           <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
           <h1 className="text-2xl font-bold text-white mb-2">Inicia sesión para continuar</h1>
-          <p className="text-graphite-400 mb-6">Accede a tu dashboard personalizado</p>
+          <p className="text-blue-200/60 mb-6">Accede a tu dashboard personalizado</p>
           <Link href="/auth/login" className="btn-primary inline-flex items-center gap-2">
             Iniciar sesión
             <ArrowRight className="w-4 h-4" />
@@ -207,7 +207,7 @@ export default function DashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-[0_0_12px_rgba(0,180,216,0.3)]">
+              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center shadow-[0_0_12px_rgba(0,180,216,0.3)]">
                 <Brain className="w-5 h-5 text-white" />
               </div>
               <span className="font-bold text-xl text-white tracking-tight">XILEX</span>
@@ -219,11 +219,11 @@ export default function DashboardPage() {
                 Nuevo simulacro
               </Link>
 
-              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl glass-subtle">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl glass-subtle">
                 <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <User className="w-3.5 h-3.5 text-white" />
                 </div>
-                <span className="text-sm font-medium text-graphite-300 hidden sm:inline">
+                <span className="text-sm font-medium text-blue-200 hidden sm:inline">
                   {user.full_name || user.email.split('@')[0]}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
               <h1 className="text-xl sm:text-3xl font-bold text-white">
                 Bienvenido, <span className="text-primary">{user.full_name || user.email.split('@')[0]}</span>
               </h1>
-              <p className="text-sm sm:text-base text-graphite-400 mt-1">
+              <p className="text-sm sm:text-base text-blue-200/60 mt-1">
                 Tu panel de práctica para admisión universitaria
               </p>
             </div>
@@ -253,57 +253,57 @@ export default function DashboardPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <GlassCard className="p-4 sm:p-5 glass-glow">
+            <GlassCard className="p-4 sm:p-5 rounded-3xl glass-glow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-graphite-500 mb-1">Completados</p>
+                  <p className="text-xs text-blue-300/40 mb-1">Completados</p>
                   <p className="text-2xl sm:text-3xl font-bold text-white">
                     {simulacrums.filter(s => s.status === 'completed').length}
                   </p>
                 </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
               </div>
             </GlassCard>
 
-            <GlassCard className="p-4 sm:p-5 glass-glow">
+            <GlassCard className="p-4 sm:p-5 rounded-3xl glass-glow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-graphite-500 mb-1">Promedio</p>
+                  <p className="text-xs text-blue-300/40 mb-1">Promedio</p>
                   <p className="text-2xl sm:text-3xl font-bold text-white">
                     {stats.avgScore.toFixed(1)}%
                   </p>
                 </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent-emerald/10 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent-emerald/10 flex items-center justify-center">
                   <Award className="w-5 h-5 sm:w-6 sm:h-6 text-accent-emerald" />
                 </div>
               </div>
             </GlassCard>
 
-            <GlassCard className="p-4 sm:p-5 glass-glow">
+            <GlassCard className="p-4 sm:p-5 rounded-3xl glass-glow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-graphite-500 mb-1">Preguntas</p>
+                  <p className="text-xs text-blue-300/40 mb-1">Preguntas</p>
                   <p className="text-2xl sm:text-3xl font-bold text-white">
                     {stats.totalQuestions}
                   </p>
                 </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                   <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                 </div>
               </div>
             </GlassCard>
 
-            <GlassCard className="p-4 sm:p-5 glass-glow">
+            <GlassCard className="p-4 sm:p-5 rounded-3xl glass-glow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-graphite-500 mb-1">Tiempo</p>
+                  <p className="text-xs text-blue-300/40 mb-1">Tiempo</p>
                   <p className="text-2xl sm:text-3xl font-bold text-white">
                     {formatTime(stats.studyTime * 60)}
                   </p>
                 </div>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-accent-amber/10 flex items-center justify-center">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent-amber/10 flex items-center justify-center">
                   <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-accent-amber" />
                 </div>
               </div>
@@ -316,31 +316,31 @@ export default function DashboardPage() {
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Quick Actions */}
-            <GlassCard className="p-5 sm:p-6">
+            <GlassCard className="p-5 sm:p-6 rounded-3xl">
               <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 mb-4">
                 <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 Acciones rápidas
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <Link href="/practice" className="glass glass-glow p-4 sm:p-5 text-center group">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                <Link href="/practice" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                     <Play className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Nuevo simulacro</h3>
-                  <p className="text-xs text-graphite-500">Configura y empieza a practicar</p>
+                  <p className="text-xs text-blue-300/40">Configura y empieza a practicar</p>
                 </Link>
-                <Link href="/progress" className="glass glass-glow p-4 sm:p-5 text-center group">
-                  <div className="w-12 h-12 rounded-xl bg-accent-emerald/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                <Link href="/progress" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-emerald/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                     <TrendingUp className="w-6 h-6 text-accent-emerald" />
                   </div>
                   <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Ver mi progreso</h3>
-                  <p className="text-xs text-graphite-500">Análisis detallado por subtema</p>
+                  <p className="text-xs text-blue-300/40">Análisis detallado por subtema</p>
                 </Link>
               </div>
             </GlassCard>
 
             {/* Recent Activity */}
-            <GlassCard className="p-5 sm:p-6">
+            <GlassCard className="p-5 sm:p-6 rounded-3xl">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2">
                   <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -353,8 +353,8 @@ export default function DashboardPage() {
 
               {simulacrums.length === 0 ? (
                 <div className="text-center py-8 sm:py-10">
-                  <Trophy className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 text-graphite-700" />
-                  <p className="text-graphite-500 mb-4 text-sm sm:text-base">No has completado ningún simulacro aún</p>
+                  <Trophy className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-3 text-blue-800" />
+                  <p className="text-blue-300/40 mb-4 text-sm sm:text-base">No has completado ningún simulacro aún</p>
                   <Link href="/practice" className="btn-primary text-sm inline-flex items-center gap-2">
                     <Play className="w-4 h-4" />
                     Crear mi primer simulacro
@@ -366,10 +366,10 @@ export default function DashboardPage() {
                     <Link 
                       key={activity.id} 
                       href={`/simulacrum/${activity.id}`}
-                      className="flex items-center gap-3 sm:gap-4 p-3 glass glass-glow group"
+                      className="flex items-center gap-3 sm:gap-4 p-3 glass glass-glow group rounded-3xl"
                     >
                       <div className={cn(
-                        'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                        'w-9 h-9 sm:w-10 sm:h-10 rounded-2xl flex items-center justify-center flex-shrink-0',
                         activity.type === 'completed' 
                           ? 'bg-accent-emerald/10 text-accent-emerald'
                           : 'bg-accent-amber/10 text-accent-amber'
@@ -382,10 +382,10 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-white text-sm truncate">{activity.title}</p>
-                        <p className="text-xs text-graphite-500">{activity.description}</p>
+                        <p className="text-xs text-blue-300/40">{activity.description}</p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p className="text-xs text-graphite-500">{activity.time}</p>
+                        <p className="text-xs text-blue-300/40">{activity.time}</p>
                         {activity.score !== null && (
                           <p className="text-xs sm:text-sm font-semibold text-primary">{activity.score.toFixed(1)}%</p>
                         )}
@@ -400,7 +400,7 @@ export default function DashboardPage() {
           {/* Right Column */}
           <div className="space-y-4 sm:space-y-6">
             {/* Weak Areas */}
-            <GlassCard className="p-5 sm:p-6">
+            <GlassCard className="p-5 sm:p-6 rounded-3xl">
               <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 mb-4">
                 <Target className="w-4 h-4 sm:w-5 sm:h-5 text-accent-rose" />
                 Áreas a reforzar
@@ -408,12 +408,12 @@ export default function DashboardPage() {
               {getWeakAreas().length === 0 ? (
                 <div className="text-center py-6 sm:py-8">
                   <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 text-accent-emerald/60" />
-                  <p className="text-graphite-500 text-xs sm:text-sm">¡Todo en orden! Sigue practicando</p>
+                  <p className="text-blue-300/40 text-xs sm:text-sm">¡Todo en orden! Sigue practicando</p>
                 </div>
               ) : (
                 <div className="space-y-2.5">
                   {getWeakAreas().map((p) => (
-                    <div key={p.id} className="glass p-3 rounded-xl">
+                    <div key={p.id} className="glass p-3 rounded-3xl">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-white truncate pr-2">
                           {p.subtopic.name}
@@ -425,14 +425,14 @@ export default function DashboardPage() {
                           {p.mastery_level}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-graphite-500 mb-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 text-xs text-blue-300/40 mb-2 flex-wrap">
                         <span className="px-1.5 py-0.5 bg-white/[0.04] rounded">{p.university.name}</span>
                         <span className="px-1.5 py-0.5 bg-white/[0.04] rounded">{p.area.name}</span>
                       </div>
-                      <div className="h-1.5 bg-graphite-800 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
                         <div className="h-full bg-accent-rose rounded-full transition-all" style={{ width: `${p.accuracy_rate}%` }} />
                       </div>
-                      <p className="text-xs text-graphite-500 mt-1">
+                      <p className="text-xs text-blue-300/40 mt-1">
                         {p.accuracy_rate.toFixed(1)}% · {p.total_attempts} intentos
                       </p>
                     </div>
@@ -442,25 +442,25 @@ export default function DashboardPage() {
             </GlassCard>
 
             {/* Strong Areas */}
-            <GlassCard className="p-5 sm:p-6">
+            <GlassCard className="p-5 sm:p-6 rounded-3xl">
               <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 mb-4">
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-accent-emerald" />
                 Tus fortalezas
               </h2>
               {getStrongAreas().length === 0 ? (
-                <p className="text-graphite-500 text-xs sm:text-sm text-center py-4">
+                <p className="text-blue-300/40 text-xs sm:text-sm text-center py-4">
                   Completa más simulacros para ver tus áreas fuertes
                 </p>
               ) : (
                 <div className="space-y-2.5">
                   {getStrongAreas().map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 p-3 glass rounded-xl">
-                      <div className="w-9 h-9 rounded-xl bg-accent-emerald/10 flex items-center justify-center flex-shrink-0">
+                    <div key={p.id} className="flex items-center gap-3 p-3 glass rounded-3xl">
+                      <div className="w-9 h-9 rounded-2xl bg-accent-emerald/10 flex items-center justify-center flex-shrink-0">
                         <CheckCircle2 className="w-4 h-4 text-accent-emerald" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-white text-sm truncate">{p.subtopic.name}</p>
-                        <p className="text-xs text-graphite-500">
+                        <p className="text-xs text-blue-300/40">
                           {p.accuracy_rate.toFixed(1)}% · {p.mastery_level}
                         </p>
                       </div>
@@ -471,37 +471,37 @@ export default function DashboardPage() {
             </GlassCard>
 
             {/* Next Steps */}
-            <GlassCard className="p-5 sm:p-6">
+            <GlassCard className="p-5 sm:p-6 rounded-3xl">
               <h2 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 mb-4">
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-accent-amber" />
                 Próximos pasos
               </h2>
               <div className="space-y-2.5">
-                <Link href="/practice" className="flex items-center gap-3 p-3 glass glass-glow group">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <Link href="/practice" className="flex items-center gap-3 p-3 glass glass-glow group rounded-3xl">
+                  <div className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
                     <Play className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-white text-sm">Crear simulacro mixto</p>
-                    <p className="text-xs text-graphite-500">Combina SIMADI + UNIMET</p>
+                    <p className="text-xs text-blue-300/40">Combina SIMADI + UNIMET</p>
                   </div>
                 </Link>
-                <Link href="/progress" className="flex items-center gap-3 p-3 glass glass-glow group">
-                  <div className="w-9 h-9 rounded-xl bg-accent-emerald/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <Link href="/progress" className="flex items-center gap-3 p-3 glass glass-glow group rounded-3xl">
+                  <div className="w-9 h-9 rounded-2xl bg-accent-emerald/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
                     <BarChart2 className="w-4 h-4 text-accent-emerald" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-white text-sm">Ver análisis detallado</p>
-                    <p className="text-xs text-graphite-500">Progreso por universidad y subtema</p>
+                    <p className="text-xs text-blue-300/40">Progreso por universidad y subtema</p>
                   </div>
                 </Link>
-                <Link href="/settings" className="flex items-center gap-3 p-3 glass glass-glow group">
-                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+                <Link href="/settings" className="flex items-center gap-3 p-3 glass glass-glow group rounded-3xl">
+                  <div className="w-9 h-9 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
                     <Settings className="w-4 h-4 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="font-medium text-white text-sm">Ajustar preferencias</p>
-                    <p className="text-xs text-graphite-500">Universidades objetivo</p>
+                    <p className="text-xs text-blue-300/40">Universidades objetivo</p>
                   </div>
                 </Link>
               </div>
