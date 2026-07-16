@@ -72,7 +72,6 @@ export default function RegisterPage() {
         if (error) throw error
 
         if (data.user) {
-          // Create user profile
           const { error: profileError } = await supabase
             .from('users')
             .insert({
@@ -120,15 +119,14 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        {/* Progress */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            <span className="text-sm font-medium text-graphite-400">
               Paso {step} de 2
             </span>
             <span className="text-sm font-medium text-primary">{progress}%</span>
           </div>
-          <div className="h-2 bg-light-border dark:bg-dark-border rounded-full overflow-hidden">
+          <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
             <div 
               className="h-full bg-primary transition-all duration-300" 
               style={{ width: `${progress}%` }}
@@ -138,15 +136,15 @@ export default function RegisterPage() {
 
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-2xl text-gray-900 dark:text-white">XILEX</span>
+            <span className="font-bold text-2xl text-white">XILEX</span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-white">
             {step === 1 ? 'Crear tu cuenta' : 'Elige tus universidades'}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-graphite-400 mt-2">
             {step === 1 
               ? 'Regístrate gratis y accede a práctica ilimitada'
               : 'Selecciona para qué pruebas te preparas (puedes cambiarlo después)'
@@ -156,14 +154,14 @@ export default function RegisterPage() {
 
         <GlassCard className="p-6 sm:p-8 animate-fade-in">
           {success && (
-            <div className="mb-6 flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-accent-emerald bg-accent-emerald/10 p-3 rounded-xl">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               <span>{success}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-500/10 p-3 rounded-xl">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -242,17 +240,17 @@ export default function RegisterPage() {
                       disabled={uni.disabled}
                       className={`w-full relative p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-4 ${
                         selectedUniversities.includes(uni.code)
-                          ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                          : 'border-light-border dark:border-dark-border hover:border-primary/50'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-white/[0.08] hover:border-primary/50'
                         } ${uni.disabled ? 'opacity-50 cursor-not-allowed' : ''}
                       `}
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${uni.color}-100 dark:bg-${uni.color}-900/30`}>
-                        <Brain className={`w-5 h-5 text-${uni.color}-600 dark:text-${uni.color}-400`} />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center bg-${uni.color}-900/30`}>
+                        <Brain className={`w-5 h-5 text-${uni.color}-400`} />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-medium text-gray-900 dark:text-white">{uni.name}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{uni.description}</p>
+                        <p className="font-medium text-white">{uni.name}</p>
+                        <p className="text-sm text-graphite-500">{uni.description}</p>
                       </div>
                       {selectedUniversities.includes(uni.code) && (
                         <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -260,7 +258,7 @@ export default function RegisterPage() {
                     </button>
                   ))}
                   {selectedUniversities.length === 0 && (
-                    <p className="text-sm text-amber-600 dark:text-amber-400 text-center py-2">
+                    <p className="text-sm text-accent-amber text-center py-2">
                       Selecciona al menos una universidad para continuar
                     </p>
                   )}
@@ -298,7 +296,7 @@ export default function RegisterPage() {
             </div>
           </form>
 
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-6 text-center text-sm text-graphite-400">
             {step === 1 
               ? '¿Ya tienes cuenta? '
               : '¿Ya tienes cuenta? '
@@ -309,7 +307,7 @@ export default function RegisterPage() {
           </p>
         </GlassCard>
 
-        <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-6 text-center text-xs text-graphite-500">
           Al registrarte, aceptas nuestros{' '}
           <Link href="/terms" className="underline hover:text-primary">Términos</Link>{' '}
           y{' '}

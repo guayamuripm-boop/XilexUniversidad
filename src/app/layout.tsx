@@ -19,9 +19,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0D9488',
+  themeColor: '#0f1117',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 }
 
 export default function RootLayout({
@@ -30,12 +32,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${inter.variable} antialiased`}>
+    <html lang="es" className={`${inter.variable} antialiased dark`} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826] text-gray-900 dark:text-gray-100">
+      <body className="min-h-screen bg-graphite-950 text-graphite-200">
         {children}
       </body>
     </html>

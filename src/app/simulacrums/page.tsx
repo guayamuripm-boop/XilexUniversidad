@@ -79,25 +79,25 @@ export default function SimulacrumsPage() {
       case 'completed':
         return {
           label: 'Completado',
-          color: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300',
+          color: 'bg-accent-emerald/10 text-accent-emerald',
           icon: CheckCircle2,
         }
       case 'in_progress':
         return {
           label: 'En progreso',
-          color: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300',
+          color: 'bg-accent-amber/10 text-accent-amber',
           icon: Play,
         }
       case 'draft':
         return {
           label: 'Borrador',
-          color: 'bg-gray-100 dark:bg-dark-border text-gray-700 dark:text-gray-300',
+          color: 'bg-white/[0.04] text-graphite-300',
           icon: Clock,
         }
       default:
         return {
           label: status,
-          color: 'bg-gray-100 dark:bg-dark-border text-gray-700 dark:text-gray-300',
+          color: 'bg-white/[0.04] text-graphite-300',
           icon: Clock,
         }
     }
@@ -105,26 +105,26 @@ export default function SimulacrumsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="glass p-8 rounded-2xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Cargando simulacros...</p>
+          <p className="text-graphite-300">Cargando simulacros...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
-      <header className="sticky top-0 z-40 glass border-b border-light-border dark:border-dark-border">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-bold text-xl text-gray-900 dark:text-white">XILEX</span>
+                <span className="font-bold text-xl text-white">XILEX</span>
               </Link>
             </div>
             <Link href="/practice" className="btn-primary hidden sm:inline-flex items-center gap-2">
@@ -139,10 +139,10 @@ export default function SimulacrumsPage() {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
                 Mis <span className="text-primary">simulacros</span>
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mt-1">
+              <p className="text-graphite-300 mt-1">
                 Historial completo de tus prácticas
               </p>
             </div>
@@ -163,7 +163,7 @@ export default function SimulacrumsPage() {
                     'px-4 py-2 rounded-xl text-sm font-medium transition-colors flex items-center gap-2',
                     filter === f
                       ? 'bg-primary text-white'
-                      : 'bg-white/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-primary/50'
+                      : 'bg-white/[0.04] border border-white/[0.08] hover:border-primary/50'
                   )}
                 >
                   <info.icon className="w-4 h-4" />
@@ -177,11 +177,11 @@ export default function SimulacrumsPage() {
         {filteredSimulacrums.length === 0 ? (
           <div className="text-center py-16">
             <GlassCard className="p-12 max-w-md mx-auto">
-              <Brain className="w-20 h-20 mx-auto mb-6 text-gray-300 dark:text-gray-600" />
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              <Brain className="w-20 h-20 mx-auto mb-6 text-graphite-400" />
+              <h2 className="text-xl font-semibold text-white mb-3">
                 {simulacrums.length === 0 ? 'No has creado simulacros aún' : 'No hay simulacros con este filtro'}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <p className="text-graphite-500 mb-6">
                 {simulacrums.length === 0
                   ? 'Crea tu primer simulacro para empezar a practicar y ver tu progreso aquí.'
                   : 'Prueba con otro filtro o crea un nuevo simulacro.'}
@@ -211,8 +211,8 @@ export default function SimulacrumsPage() {
                       <StatusIcon className="w-6 h-6" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900 dark:text-white truncate">{sim.name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <h3 className="font-semibold text-white truncate">{sim.name}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-sm text-graphite-500 mt-1">
                         <span className="flex items-center gap-1">
                           <Brain className="w-3.5 h-3.5" />
                           {sim.total_questions} preguntas
@@ -236,16 +236,16 @@ export default function SimulacrumsPage() {
 
                     {isCompleted && sim.score !== null && (
                       <div className="text-right">
-                        <p className={cn('text-lg font-bold', sim.score! >= 70 ? 'text-emerald-600 dark:text-emerald-400' : sim.score! >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400')}>
+                        <p className={cn('text-lg font-bold', sim.score! >= 70 ? 'text-accent-emerald' : sim.score! >= 50 ? 'text-accent-amber' : 'text-red-400')}>
                           {sim.score!.toFixed(1)}%
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-graphite-500">
                           {sim.correct_count}✓ {sim.incorrect_count}✗ {sim.unanswered_count}○
                         </p>
                       </div>
                     )}
 
-                    <ArrowRight className="w-5 h-5 text-gray-400" />
+                    <ArrowRight className="w-5 h-5 text-graphite-400" />
                   </div>
                 </Link>
               )

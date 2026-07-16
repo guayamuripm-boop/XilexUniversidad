@@ -4,127 +4,172 @@
 
 @layer base {
   :root {
-    --primary: #0EA5A0;
-    --primary-dark: #0B6E6B;
-    --primary-light: #E3F5F3;
-    --dark-bg: #0B1F1E;
-    --dark-surface: #0F2D2B;
-    --dark-border: #1A3A37;
-    --dark-text: #E0F5F3;
-    --dark-muted: #6BAA9E;
-    --light-bg: #F0FDFB;
-    --light-surface: #FFFFFF;
-    --light-border: #CCF2EE;
-    --light-text: #0B1F1E;
-    --light-muted: #5D9E93;
+    --primary: #00b4d8;
+    --primary-dark: #0891b2;
+    --primary-light: #e0f7fa;
+    --graphite-950: #0f1117;
+    --graphite-925: #16181d;
+    --graphite-900: #1e2028;
+    --graphite-800: #3a3f4f;
+    --graphite-700: #434a5d;
+    --graphite-400: #858ea5;
+    --graphite-200: #d5d8e0;
   }
 
   * {
-    @apply border-light-border dark:border-dark-border;
+    @apply border-graphite-800;
+  }
+
+  html {
+    @apply bg-graphite-950;
+    color-scheme: dark;
   }
 
   body {
-    @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text antialiased;
-    background-image: linear-gradient(to bottom right, var(--light-bg), #FFFFFF, var(--primary-light));
-  }
-
-  @media (prefers-color-scheme: dark) {
-    body {
-      background-image: linear-gradient(to bottom right, #051817, var(--dark-bg), #052826);
-    }
+    @apply bg-graphite-950 text-graphite-200 antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(0,180,216,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(52,211,153,0.04) 0%, transparent 50%),
+      linear-gradient(180deg, #0f1117 0%, #12141a 50%, #0f1117 100%);
+    background-attachment: fixed;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-light-bg dark:ring-offset-dark-bg;
+    @apply outline-none ring-2 ring-primary/60 ring-offset-2 ring-offset-graphite-950;
   }
 
   ::selection {
-    @apply bg-primary/30 text-primary-dark dark:text-primary-light;
+    @apply bg-primary/30 text-primary-300;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-graphite-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-graphite-600;
   }
 }
 
 @layer components {
+  /* Liquid Glass Card */
   .glass {
-    @apply backdrop-blur-xl bg-white/70 dark:bg-dark-surface/70 border border-light-border dark:border-dark-border;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    .glass {
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
-    }
-  }
-
-  .glass-dark {
-    @apply backdrop-blur-xl bg-dark-surface/80 dark:bg-dark-bg/90 border border-primary/20;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+    @apply backdrop-blur-xl
+      bg-white/[0.04]
+      border border-white/[0.08]
+      shadow-glass;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
   }
 
   .glass-strong {
-    @apply bg-white/80 dark:bg-dark-surface/90;
+    @apply backdrop-blur-2xl
+      bg-white/[0.07]
+      border border-white/[0.1]
+      shadow-glass-lg;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
   }
 
   .glass-subtle {
-    @apply bg-white/50 dark:bg-dark-surface/50;
+    @apply backdrop-blur-lg
+      bg-white/[0.03]
+      border border-white/[0.05]
+      shadow-glass-sm;
   }
 
+  .glass-dark {
+    @apply backdrop-blur-xl
+      bg-graphite-925/80
+      border border-white/[0.06]
+      shadow-glass;
+  }
+
+  /* Liquid Glass with glow on hover */
+  .glass-glow {
+    @apply glass transition-all duration-500;
+  }
+  .glass-glow:hover {
+    @apply border-primary/20 shadow-glow;
+    background-image: linear-gradient(135deg, rgba(0,180,216,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  }
+
+  /* Buttons */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-white rounded-xl
-      bg-primary hover:bg-primary-dark
-      shadow-[0_4px_14px_rgba(14,165,160,0.3)]
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-semibold text-white rounded-xl
+      bg-gradient-to-r from-primary to-primary-600
+      hover:from-primary-600 hover:to-primary-700
+      shadow-[0_4px_14px_rgba(0,180,216,0.3)]
+      hover:shadow-[0_6px_20px_rgba(0,180,216,0.4)]
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
       disabled:opacity-50 disabled:cursor-not-allowed
       active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary-dark dark:text-primary-light
-      bg-primary-light dark:bg-primary-dark/30
-      hover:bg-primary-light/80 dark:hover:bg-primary-dark/50
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary
+      bg-primary/10 border border-primary/20
+      hover:bg-primary/20 hover:border-primary/30
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
       disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium text-primary
-      border-2 border-primary
-      hover:bg-primary hover:text-white
+      border-2 border-primary/40
+      hover:bg-primary/10 hover:border-primary/60
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950
       disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-primary
-      hover:bg-primary-light dark:hover:bg-primary-dark/20
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-graphite-300
+      hover:bg-white/[0.06] hover:text-white
       rounded-xl
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
+      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-graphite-950;
   }
 
+  /* Inputs */
   .input-glass {
-    @apply w-full px-4 py-3 text-base text-light-text dark:text-dark-text
-      bg-white/80 dark:bg-dark-surface/80
-      border border-light-border dark:border-dark-border
+    @apply w-full px-4 py-3 text-base text-graphite-100
+      bg-white/[0.04] backdrop-blur-sm
+      border border-white/[0.08]
       rounded-xl
-      placeholder:text-light-muted dark:placeholder:text-dark-muted
-      backdrop-blur-sm
+      placeholder:text-graphite-500
       transition-all duration-200
-      focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent
+      focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30
+      focus:bg-white/[0.06]
       disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .label-glass {
-    @apply block text-sm font-medium text-light-text dark:text-dark-text mb-1.5;
+    @apply block text-sm font-medium text-graphite-300 mb-1.5;
   }
 
+  /* Card hover */
   .card-hover {
     @apply transition-all duration-300
-      hover:shadow-[0_8px_30px_rgba(14,165,160,0.15)] dark:hover:shadow-[0_8px_30px_rgba(94,234,212,0.1)]
-      hover:border-primary/30 dark:hover:border-primary/20
-      hover:scale-[1.01];
+      hover:shadow-glass-lg
+      hover:border-white/[0.12]
+      hover:bg-white/[0.06];
+  }
+
+  .card-hover-glow {
+    @apply card-hover
+      hover:border-primary/20
+      hover:shadow-glow;
   }
 }
 
@@ -134,11 +179,11 @@
   }
 
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.4s ease-out;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
+    animation: slideUp 0.5s ease-out;
   }
 
   .animate-slide-down {
@@ -155,17 +200,17 @@
   }
 
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(-12px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
   }
 
@@ -176,5 +221,22 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Glassmorphism gradient borders */
+  .gradient-border {
+    position: relative;
+  }
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }

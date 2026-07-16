@@ -85,27 +85,27 @@ function LoginForm() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
               <Brain className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-2xl text-gray-900 dark:text-white">XILEX</span>
+            <span className="font-bold text-2xl text-white">XILEX</span>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Iniciar sesión</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <h1 className="text-2xl font-bold text-white">Iniciar sesión</h1>
+          <p className="text-graphite-400 mt-2">
             Accede a tu práctica personalizada para SIMADI, UNIMET y más
           </p>
         </div>
 
         <GlassCard className="p-6 sm:p-8">
           {success && (
-            <div className="mb-6 flex items-center gap-2 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-accent-emerald bg-accent-emerald/10 p-3 rounded-xl">
               <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
               <span>{success}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 flex items-center gap-2 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">
+            <div className="mb-6 flex items-center gap-2 text-red-400 bg-red-500/10 p-3 rounded-xl">
               <span className="w-5 h-5 flex-shrink-0">⚠</span>
               <span>{error}</span>
             </div>
@@ -144,9 +144,9 @@ function LoginForm() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/50"
+                  className="w-4 h-4 rounded border-graphite-400 text-primary focus:ring-primary/50"
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Recordarme</span>
+                <span className="text-sm text-graphite-400">Recordarme</span>
               </label>
               <Link href="/auth/forgot-password" className="text-sm text-primary hover:underline">
                 ¿Olvidaste tu contraseña?
@@ -167,10 +167,10 @@ function LoginForm() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-light-border dark:border-dark-border" />
+              <div className="w-full border-t border-white/[0.08]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white/80 dark:bg-dark-bg/80 backdrop-blur-sm text-gray-500 dark:text-gray-400">
+              <span className="px-4 bg-graphite-925/80 backdrop-blur-sm text-graphite-500">
                 O continuar con
               </span>
             </div>
@@ -217,7 +217,7 @@ function LoginForm() {
             </GlassButton>
           </div>
 
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-6 text-center text-sm text-graphite-400">
             ¿No tienes cuenta?{' '}
             <Link href="/auth/register" className="text-primary font-medium hover:underline">
               Regístrate gratis
@@ -225,7 +225,7 @@ function LoginForm() {
           </p>
         </GlassCard>
 
-        <p className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
+        <p className="mt-6 text-center text-xs text-graphite-500">
           Al continuar, aceptas nuestros{' '}
           <Link href="/terms" className="underline hover:text-primary">Términos</Link>{' '}
           y{' '}

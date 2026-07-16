@@ -286,10 +286,10 @@ export default function SimulacrumPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="glass p-8 rounded-2xl text-center">
           <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 dark:text-gray-300">Cargando simulacro...</p>
+          <p className="text-graphite-400">Cargando simulacro...</p>
         </div>
       </div>
     )
@@ -297,10 +297,10 @@ export default function SimulacrumPage() {
 
   if (!currentSimulacrum) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
+      <div className="min-h-screen flex items-center justify-center px-4">
         <GlassCard className="p-8 max-w-md w-full text-center">
           <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Simulacro no encontrado</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">Simulacro no encontrado</h1>
           <Link href="/dashboard" className="btn-primary inline-flex items-center gap-2">
             <Home className="w-4 h-4" />
             Volver al dashboard
@@ -313,11 +313,11 @@ export default function SimulacrumPage() {
   // Results view
   if (currentSimulacrum.status === 'completed') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
-        <header className="sticky top-0 z-40 glass border-b border-light-border dark:border-dark-border">
+      <div className="min-h-screen">
+        <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center">
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                 <Brain className="w-5 h-5 text-white" />
               </div>
             </Link>
@@ -331,16 +331,16 @@ export default function SimulacrumPage() {
               <span className={cn(
                 'inline-flex items-center gap-2 px-4 py-2 rounded-full text-lg font-bold',
                 currentSimulacrum.score! >= 70 
-                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
+                  ? 'bg-accent-emerald/10 text-accent-emerald' :
                   currentSimulacrum.score! >= 50
-                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                  'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                  ? 'bg-accent-amber/10 text-accent-amber' :
+                  'bg-red-500/10 text-red-400'
               )}>
                 {currentSimulacrum.score?.toFixed(1)}%
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{currentSimulacrum.name}</h2>
-            <div className="flex items-center justify-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+            <h2 className="text-2xl font-bold text-white mb-2">{currentSimulacrum.name}</h2>
+            <div className="flex items-center justify-center gap-6 text-sm text-graphite-400">
               <span className="flex items-center gap-1">
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                 {currentSimulacrum.correct_count} correctas
@@ -368,7 +368,7 @@ export default function SimulacrumPage() {
 
           {/* Question Review */}
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
               <Brain className="w-5 h-5 text-primary" />
               Revisión de respuestas
             </h2>
@@ -389,21 +389,21 @@ export default function SimulacrumPage() {
                         )}>
                           {sq.question.difficulty}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary-light dark:bg-primary-dark/30 text-primary">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                           {sq.question.subtopic.area.name} / {sq.question.subtopic.name}
                         </span>
                         {isCorrect === true && <CheckCircle2 className="w-4 h-4 text-emerald-500" />}
                         {isCorrect === false && <XCircle className="w-4 h-4 text-red-500" />}
                         {userAnswer === null && <AlertCircle className="w-4 h-4 text-amber-500" />}
                       </div>
-                      <p className="text-gray-900 dark:text-white">{sq.question.statement}</p>
+                      <p className="text-white">{sq.question.statement}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className={cn(
                         'px-3 py-1 rounded-full text-sm font-medium',
-                        isCorrect ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
-                        userAnswer ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                        'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                        isCorrect ? 'bg-accent-emerald/10 text-accent-emerald' :
+                        userAnswer ? 'bg-red-500/10 text-red-400' :
+                        'bg-accent-amber/10 text-accent-amber'
                       )}>
                         {isCorrect ? 'Correcta' : userAnswer ? 'Incorrecta' : 'Sin responder'}
                       </span>
@@ -418,10 +418,10 @@ export default function SimulacrumPage() {
                         className={cn(
                           'flex items-center gap-3 p-3 rounded-xl transition-colors',
                           key === correctAnswer 
-                            ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' :
+                            ? 'bg-accent-emerald/10 border border-accent-emerald/30' :
                             key === userAnswer
-                            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
-                            'bg-gray-50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border'
+                            ? 'bg-red-500/10 border border-red-500/30' :
+                            'bg-white/[0.04] border border-white/[0.08]'
                         )}
                       >
                         <div className={cn(
@@ -430,11 +430,11 @@ export default function SimulacrumPage() {
                             ? 'bg-emerald-500 text-white' :
                             key === userAnswer
                             ? 'bg-red-500 text-white' :
-                            'bg-gray-200 dark:bg-dark-border text-gray-600 dark:text-gray-300'
+                            'bg-white/[0.08] text-graphite-400'
                         )}>
                           {key}
                         </div>
-                        <span className="text-gray-900 dark:text-white">{value}</span>
+                        <span className="text-white">{value}</span>
                         {key === correctAnswer && <CheckCircle2 className="w-4 h-4 text-emerald-500 ml-auto" />}
                         {key === userAnswer && key !== correctAnswer && <XCircle className="w-4 h-4 text-red-500 ml-auto" />}
                       </div>
@@ -445,9 +445,9 @@ export default function SimulacrumPage() {
                   <div className="glass p-4 rounded-xl border-l-4 border-primary">
                     <div className="flex items-center gap-2 mb-2">
                       <Brain className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-gray-900 dark:text-white">Explicación</span>
+                      <span className="font-medium text-white">Explicación</span>
                     </div>
-                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                    <p className="text-graphite-300 text-sm leading-relaxed">
                       {sq.question.explanation}
                     </p>
                   </div>
@@ -462,20 +462,20 @@ export default function SimulacrumPage() {
 
   // Active / Draft Simulacrum View
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-emerald-50 dark:from-[#051817] dark:via-[#0B1F1E] dark:to-[#052826]">
+    <div className="min-h-screen">
       {/* Header with Timer */}
-      <header className="sticky top-0 z-40 glass border-b border-light-border dark:border-dark-border">
+      <header className="sticky top-0 z-40 glass border-b border-white/[0.08]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
                   <Brain className="w-5 h-5 text-white" />
                 </div>
               </Link>
               <div>
-                <h1 className="font-semibold text-gray-900 dark:text-white text-sm">{currentSimulacrum.name}</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <h1 className="font-semibold text-white text-sm">{currentSimulacrum.name}</h1>
+                <p className="text-xs text-graphite-500">
                   Pregunta {currentQuestionIndex + 1} de {simQuestions.length}
                 </p>
               </div>
@@ -485,8 +485,8 @@ export default function SimulacrumPage() {
             <div className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-xl font-mono text-lg font-bold transition-colors',
               timeRemaining <= 300 
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 animate-pulse' 
-                : 'bg-primary-light dark:bg-primary-dark/30 text-primary'
+                ? 'bg-red-500/10 text-red-400 animate-pulse' 
+                : 'bg-primary/10 text-primary'
             )}>
               <Clock className="w-5 h-5" />
               <span>{formatTime(timeRemaining)}</span>
@@ -494,13 +494,13 @@ export default function SimulacrumPage() {
 
             {/* Progress */}
             <div className="hidden md:block w-48">
-              <div className="h-2 bg-light-border dark:bg-dark-border rounded-full overflow-hidden">
+              <div className="h-2 bg-white/[0.08] rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-primary rounded-full transition-all duration-300" 
                   style={{ width: `${progress.percentage}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 text-right mt-1">
+              <p className="text-xs text-graphite-500 text-right mt-1">
                 {progress.answered} / {progress.total} respondidas
               </p>
             </div>
@@ -529,12 +529,12 @@ export default function SimulacrumPage() {
                     isCurrent 
                       ? 'ring-2 ring-primary ring-offset-2 bg-primary text-white' :
                       isCorrect === true
-                      ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' :
+                      ? 'bg-accent-emerald/10 text-accent-emerald' :
                       isCorrect === false
-                      ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                      ? 'bg-red-500/10 text-red-400' :
                       isAnswered
-                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' :
-                      'bg-gray-100 dark:bg-dark-border text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-dark-border/50'
+                      ? 'bg-primary/10 text-primary' :
+                      'bg-white/[0.04] text-graphite-500 hover:bg-white/[0.08]'
                   )}
                   title={`Pregunta ${index + 1}`}
                 >
@@ -558,16 +558,16 @@ export default function SimulacrumPage() {
               )}>
                 {currentQuestion.question.difficulty}
               </span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary-light dark:bg-primary-dark/30 text-primary">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
                 {currentQuestion.question.subtopic.area.name}
               </span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-gray-300">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/[0.04] text-graphite-400">
                 {currentQuestion.question.subtopic.name}
               </span>
             </div>
 
             {/* Question Statement */}
-            <p className="text-xl font-medium text-gray-900 dark:text-white mb-6 leading-relaxed">
+            <p className="text-xl font-medium text-white mb-6 leading-relaxed">
               {currentQuestion.question.statement}
             </p>
 
@@ -582,19 +582,19 @@ export default function SimulacrumPage() {
                     className={cn(
                       'w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all',
                       isSelected
-                        ? 'bg-primary bg-opacity-10 border-2 border-primary dark:border-primary/50'
-                        : 'bg-white/50 dark:bg-dark-surface/50 border border-light-border dark:border-dark-border hover:border-primary/50 hover:bg-primary/5'
+                        ? 'bg-primary/10 border-2 border-primary'
+                        : 'bg-white/[0.04] border border-white/[0.08] hover:border-primary/30 hover:bg-primary/[0.04]'
                     )}
                   >
                     <div className={cn(
                       'w-10 h-10 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0',
                       isSelected
                         ? 'bg-primary text-white'
-                        : 'bg-gray-100 dark:bg-dark-border text-gray-600 dark:text-gray-300'
+                        : 'bg-white/[0.08] text-graphite-400'
                     )}>
                       {key}
                     </div>
-                    <span className="text-gray-900 dark:text-white flex-1">{value}</span>
+                    <span className="text-white flex-1">{value}</span>
                     {isSelected && <CheckCircle2 className="w-5 h-5 text-primary" />}
                   </button>
                 )
@@ -602,7 +602,7 @@ export default function SimulacrumPage() {
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between pt-4 border-t border-light-border dark:border-dark-border">
+            <div className="flex items-center justify-between pt-4 border-t border-white/[0.08]">
               <GlassButton 
                 variant="ghost" 
                 onClick={handlePrev} 
@@ -613,7 +613,7 @@ export default function SimulacrumPage() {
                 Anterior
               </GlassButton>
 
-              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center gap-2 text-sm text-graphite-500">
                 <Flag className="w-4 h-4" />
                 {answers[currentQuestion.question_id] ? 'Respondida' : 'Pendiente'}
               </div>
@@ -670,10 +670,10 @@ export default function SimulacrumPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
             <GlassCard className="p-8 text-center">
               <Brain className="w-16 h-16 mx-auto mb-4 text-primary" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-bold text-white mb-2">
                 ¿Listo para comenzar?
               </h2>
-              <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+              <p className="text-graphite-400 mb-6 max-w-md mx-auto">
                 Este simulacro tiene {currentSimulacrum.total_questions} preguntas y un límite de {currentSimulacrum.time_limit_minutes} minutos. 
                 Una vez iniciado, el tiempo comenzará a correr.
               </p>

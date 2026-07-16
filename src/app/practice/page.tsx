@@ -183,22 +183,22 @@ export default function PracticePage() {
         {/* Header */}
         <div className="mb-10 animate-fade-in">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center">
               <Brain className="w-5 h-5 text-white" />
             </div>
-            <span className="font-bold text-2xl text-gray-900 dark:text-white">XILEX</span>
+            <span className="font-bold text-2xl text-white">XILEX</span>
           </Link>
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
             Crear tu <span className="text-primary">simulacro personalizado</span>
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+          <p className="text-lg text-graphite-400 max-w-2xl">
             Elige universidad, áreas y número de preguntas. Practica a tu ritmo con feedback inmediato.
           </p>
         </div>
 
         {/* University Selection */}
         <div className="mb-10 animate-slide-up">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
             1. Selecciona tu universidad objetivo
           </h2>
@@ -213,24 +213,24 @@ export default function PracticePage() {
                 }}
                 className={`glass card-hover p-4 relative group ${
                   selectedUni === u.code 
-                    ? 'ring-2 ring-primary border-primary/30 bg-primary/5 dark:bg-primary/5' 
+                    ? 'ring-2 ring-primary border-primary/30 bg-primary/5' 
                     : ''
                 } ${u.status === 'coming' ? 'opacity-60' : ''}`}
                 disabled={u.status === 'coming'}
               >
                 {u.status === 'coming' && (
-                  <div className="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 dark:bg-dark-border text-gray-500 dark:text-gray-400">
+                  <div className="absolute top-3 right-3 px-2 py-0.5 text-xs font-medium rounded-full bg-white/[0.04] text-graphite-500">
                     Próximamente
                   </div>
                 )}
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${getUniversityColor(u.code).replace('text-', 'bg-').replace('dark:text-', 'dark:bg-').replace('bg-', 'bg-')}`}>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${getUniversityColor(u.code).replace('text-', 'bg-')}`}>
                   <Brain className="w-6 h-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{u.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 line-clamp-2">{u.description}</p>
+                <h3 className="font-semibold text-white mb-1">{u.name}</h3>
+                <p className="text-sm text-graphite-500 mb-3 line-clamp-2">{u.description}</p>
                 <div className="flex flex-wrap gap-1">
                   {u.areas.map(a => (
-                    <span key={a.code} className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-dark-border rounded text-gray-600 dark:text-gray-300">
+                    <span key={a.code} className="px-2 py-0.5 text-xs bg-white/[0.04] rounded text-graphite-400">
                       {a.name}
                     </span>
                   ))}
@@ -248,7 +248,7 @@ export default function PracticePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-slide-up">
             {/* Areas Selection */}
             <GlassCard className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
                 2. Elige áreas a practicar
               </h3>
@@ -258,8 +258,8 @@ export default function PracticePage() {
                     key={area.code}
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                       selectedAreas.includes(area.code)
-                        ? 'border-primary bg-primary/5 dark:bg-primary/5'
-                        : 'border-light-border dark:border-dark-border hover:border-primary/30'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-white/[0.08] hover:border-primary/30'
                     }`}
                   >
                     <input
@@ -276,20 +276,20 @@ export default function PracticePage() {
                       className="w-5 h-5 text-primary border-primary rounded focus:ring-primary/50"
                     />
                     <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">{area.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                      <div className="font-medium text-white">{area.name}</div>
+                      <div className="text-sm text-graphite-500">
                         {area.questions} preguntas · {area.time} min
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="font-semibold text-primary">{area.questions}</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">preguntas</div>
+                      <div className="text-xs text-graphite-500">preguntas</div>
                     </div>
                   </label>
                 ))}
               </div>
               {selectedAreas.length === 0 && (
-                <p className="mt-4 text-sm text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <p className="mt-4 text-sm text-accent-amber flex items-center gap-1">
                   <Sparkles className="w-4 h-4" />
                   Selecciona al menos un área o deja vacío para practicar todas
                 </p>
@@ -298,14 +298,14 @@ export default function PracticePage() {
 
             {/* Question Count & Summary */}
             <GlassCard className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Play className="w-5 h-5 text-primary" />
                 3. Configura tu simulacro
               </h3>
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-graphite-300 mb-2">
                     Número de preguntas: {questionCount}
                   </label>
                   <input
@@ -315,28 +315,28 @@ export default function PracticePage() {
                     step={5}
                     value={questionCount}
                     onChange={(e) => setQuestionCount(Number(e.target.value))}
-                    className="w-full h-2 bg-light-border dark:bg-dark-border rounded-lg appearance-none cursor-pointer accent-primary"
+                    className="w-full h-2 bg-white/[0.08] rounded-lg appearance-none cursor-pointer accent-primary"
                   />
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <div className="flex justify-between text-xs text-graphite-500 mt-1">
                     <span>Mín: 10</span>
                     <span>Máx: {uni.totalQuestions}</span>
                   </div>
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-light-border dark:border-dark-border">
+                <div className="space-y-3 pt-4 border-t border-white/[0.08]">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Preguntas</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{questionCount}</span>
+                    <span className="text-graphite-400">Preguntas</span>
+                    <span className="font-semibold text-white">{questionCount}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Tiempo estimado</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
+                    <span className="text-graphite-400">Tiempo estimado</span>
+                    <span className="font-semibold text-white">
                       ~{Math.round(questionCount * 1.5)} min
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Áreas seleccionadas</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
+                    <span className="text-graphite-400">Áreas seleccionadas</span>
+                    <span className="font-semibold text-white">
                       {selectedAreas.length > 0 ? selectedAreas.length : uni.areas.length}
                     </span>
                   </div>
@@ -365,7 +365,7 @@ export default function PracticePage() {
                   )}
                 </GlassButton>
 
-                <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-center text-xs text-graphite-500">
                   Gratis · Sin límite de intentos · Feedback explicado
                 </p>
               </div>
@@ -375,7 +375,7 @@ export default function PracticePage() {
 
         {/* Features preview */}
         <section className="mt-16 animate-fade-in">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-10">
+          <h2 className="text-2xl font-bold text-white text-center mb-10">
             ¿Por qué practicar con <span className="text-primary">XILEX</span>?
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -385,11 +385,11 @@ export default function PracticePage() {
               { icon: Users, title: 'Progreso por subtema', desc: 'Mide tu dominio en Acentuación, Silogismos, Analogías, Comprensión y más. No solo puntaje global.' },
             ].map((f, i) => (
               <GlassCard key={f.title} className="p-6 card-hover">
-                <div className="w-12 h-12 rounded-xl bg-primary-light dark:bg-primary-dark/20 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                   <f.icon className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{f.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{f.desc}</p>
+                <h3 className="text-lg font-semibold text-white mb-2">{f.title}</h3>
+                <p className="text-graphite-400">{f.desc}</p>
               </GlassCard>
             ))}
           </div>
