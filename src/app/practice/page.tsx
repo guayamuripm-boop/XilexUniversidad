@@ -17,9 +17,10 @@ const universities = [
     areas: [
       { code: 'logico', name: 'Razonamiento Lógico', questions: 30, time: 45 },
       { code: 'verbal', name: 'Razonamiento Verbal', questions: 30, time: 45 },
+      { code: 'especializacion', name: 'Especialización (Bloque 3)', questions: 30, time: 45 },
     ],
-    totalQuestions: 60,
-    totalTime: 90,
+    totalQuestions: 90,
+    totalTime: 135,
     status: 'active',
     description: 'Examen común para todas las carreras. 3er bloque varía por cluster.',
   },
@@ -39,24 +40,25 @@ const universities = [
     code: 'usb',
     name: 'USB',
     areas: [
-      { code: 'habilidades', name: 'Habilidades', questions: 45, time: 60 },
-      { code: 'conocimientos', name: 'Conocimientos', questions: 45, time: 60 },
+      { code: 'habilidades', name: 'Habilidades', questions: 34, time: 50 },
+      { code: 'conocimientos', name: 'Conocimientos', questions: 66, time: 70 },
     ],
-    totalQuestions: 90,
+    totalQuestions: 100,
     totalTime: 120,
-    status: 'coming',
+    status: 'active',
     description: 'Examen único para carreras largas. Solo cambia puntaje de corte.',
   },
   {
     code: 'ucab',
     name: 'UCAB',
     areas: [
-      { code: 'numerica', name: 'Prueba Numérica', questions: 45, time: 60 },
-      { code: 'verbal', name: 'Prueba Verbal', questions: 45, time: 60 },
+      { code: 'verbal', name: 'Prueba Verbal', questions: 34, time: 40 },
+      { code: 'numerica', name: 'Prueba Numérica', questions: 33, time: 40 },
+      { code: 'logico', name: 'Razonamiento Lógico', questions: 33, time: 40 },
     ],
-    totalQuestions: 90,
+    totalQuestions: 100,
     totalTime: 120,
-    status: 'coming',
+    status: 'active',
     description: 'Prueba común a 19 carreras y 5 TSU. IIA determina corte.',
   },
 ]
@@ -82,6 +84,15 @@ export default function PracticePage() {
         return
       }
 
+      // Obtener clusters del usuario si es SIMADI
+      const { data: userData } = await supabase
+        .from('users')
+        .select('target_clusters')
+        .eq('id', user.id)
+        .single()
+
+      const userClusters = userData?.target_clusters || []
+
       const { data: uniData, error: uniError } = await supabase
         .from('universities')
         .select('id')
@@ -106,11 +117,16 @@ export default function PracticePage() {
         ? areas.filter(a => selectedAreas.includes(a.code)).map(a => a.id)
         : areas.map(a => a.id)
 
+      // Obtener clusters del usuario si es SIMADI y se selecciona especializacion
+      const hasEspecializacion = selectedAreas.includes('especializacion') && selectedUni === 'simadi'
+      const clusterCodes = hasEspecializacion ? userClusters : null
+
       const { data: questions, error } = await supabase.rpc('get_random_questions', {
         p_university_ids: [universityId],
         p_area_ids: areaIds,
         p_limit: questionCount,
         p_exclude_ids: [],
+        p_cluster_codes: clusterCodes,
       })
 
       if (error) throw error

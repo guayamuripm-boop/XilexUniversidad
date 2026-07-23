@@ -3,3 +3,5 @@
 
  ✓ Starting...
  ✓ Ready in 1346ms
+
+C:\Dev\XILEX\xilex-app>

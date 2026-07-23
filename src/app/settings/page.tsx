@@ -8,7 +8,7 @@ import { useAuthStore, useUIStore } from '@/lib/store'
 import {
   Brain, Save, CheckCircle2, Target, Moon, Download, Shield, Bell,
   AlertCircle, LogOut, Trash2, Lock, Sun, Monitor, ArrowRight,
-  User, Eye, EyeOff, Key
+  User, Eye, EyeOff, Key, GraduationCap, HeartPulse, FlaskConical, Briefcase, BookOpen
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,8 +17,15 @@ export const dynamic = 'force-dynamic'
 const universities = [
   { code: 'simadi', name: 'SIMADI (UCV)' },
   { code: 'unimet', name: 'UNIMET' },
-  { code: 'usb', name: 'USB (próximamente)' },
-  { code: 'ucab', name: 'UCAB (próximamente)' },
+  { code: 'usb', name: 'USB' },
+  { code: 'ucab', name: 'UCAB' },
+]
+
+const simadiClusters = [
+  { code: 'salud', name: 'Salud', careers: ['Medicina', 'Enfermería', 'Bioanálisis', 'Odontología', 'Farmacia'] },
+  { code: 'agro_mar', name: 'Agro y Mar', careers: ['Agronomía', 'Veterinaria', 'Ingeniería Pesquera', 'Acuicultura'] },
+  { code: 'ciencia_tecnologia', name: 'Ciencia y Tecnología', careers: ['Ingenierías', 'Física', 'Química', 'Matemáticas', 'Computación'] },
+  { code: 'sociales_humanidades', name: 'Ciencias Sociales / Humanidades / Educación', careers: ['Derecho', 'Administración', 'Psicología', 'Educación', 'Comunicación Social', 'Sociología'] },
 ]
 
 export default function SettingsPage() {
@@ -27,6 +34,7 @@ export default function SettingsPage() {
 
   const [fullName, setFullName] = useState('')
   const [targetUnis, setTargetUnis] = useState<string[]>([])
+  const [targetClusters, setTargetClusters] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
@@ -41,6 +49,7 @@ export default function SettingsPage() {
     if (user) {
       setFullName(user.full_name || '')
       setTargetUnis(user.target_universities || [])
+      setTargetClusters(user.target_clusters || [])
     }
   }, [user])
 
@@ -54,11 +63,15 @@ export default function SettingsPage() {
     try {
       const { error } = await supabase
         .from('users')
-        .update({ full_name: fullName, target_universities: targetUnis })
+        .update({ 
+          full_name: fullName, 
+          target_universities: targetUnis,
+          target_clusters: targetClusters
+        })
         .eq('id', user.id)
       if (error) throw error
 
-      setUser({ ...user, full_name: fullName, target_universities: targetUnis })
+      setUser({ ...user, full_name: fullName, target_universities: targetUnis, target_clusters: targetClusters })
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (err: any) {
@@ -241,6 +254,48 @@ export default function SettingsPage() {
               </label>
             ))}
           </div>
+        </GlassCard>
+
+        {/* Especialización SIMADI */}
+        <GlassCard className="p-6 rounded-3xl">
+          <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-primary" />
+            Especialización SIMADI
+          </h2>
+          <p className="text-sm text-blue-300/40 mb-4">
+            Selecciona tu área de especialización para filtrar preguntas en Práctica y Simulacros SIMADI
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {simadiClusters.map((cluster) => {
+              const iconMap: Record<string, any> = {
+                salud: HeartPulse,
+                agro_mar: BookOpen,
+                ciencia_tecnologia: FlaskConical,
+                sociales_humanidades: Briefcase,
+              }
+              const Icon = iconMap[cluster.code] || GraduationCap
+              return (
+                <button
+                  key={cluster.code}
+                  onClick={() => setTargetClusters(prev => prev.includes(cluster.code)
+                    ? prev.filter(c => c !== cluster.code)
+                    : [...prev, cluster.code])}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2 ${
+                    targetClusters.includes(cluster.code)
+                      ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
+                      : 'border-white/[0.08] hover:border-primary/50 bg-white/[0.02]'
+                  }`}
+                >
+                  <Icon className="w-6 h-6 text-primary" />
+                  <p className="font-medium text-white text-sm text-center">{cluster.name}</p>
+                  <p className="text-xs text-gray-400 text-center">{cluster.careers.slice(0, 2).join(', ')}...</p>
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-3 text-xs text-blue-300/50 text-center">
+            Selecciona tu cluster según la carrera que quieres estudiar
+          </p>
         </GlassCard>
 
         {/* Apariencia */}
