@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { VersionBadge } from '@/components/VersionBadge'
 
 const inter = { 
   className: 'font-inter',
@@ -39,6 +40,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-graphite-950 text-graphite-200">
         {children}
+        <VersionBadge />
       </body>
     </html>
   )
