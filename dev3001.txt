@@ -1,7 +1,0 @@
-  ▲ Next.js 14.2.0
-  - Local:        http://localhost:3001
-
- ✓ Starting...
- ✓ Ready in 1346ms
-
-C:\Dev\XILEX\xilex-app>

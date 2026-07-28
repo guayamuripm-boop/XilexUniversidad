@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard, GlassButton } from '@/components/ui/glass'
-import { Brain, Target, Play, Clock, Users, Trophy, ArrowRight, Plus, CheckCircle2, Sparkles } from 'lucide-react'
-import { getUniversityColor, getUniversityName } from '@/lib/utils'
+import { Brain, Target, Play, Users, Trophy, ArrowRight, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react'
+import { getUniversityAccent, getUniversityName } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,13 +70,15 @@ export default function PracticePage() {
   const [questionCount, setQuestionCount] = useState(20)
   const [loading, setLoading] = useState(false)
   const [showConfig, setShowConfig] = useState(false)
+  const [error, setError] = useState('')
 
   const supabase = createClient()
 
   const handleStartSimulacrum = async () => {
     if (!selectedUni) return
-    
+
     setLoading(true)
+    setError('')
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -84,14 +86,13 @@ export default function PracticePage() {
         return
       }
 
-      // Obtener clusters del usuario si es SIMADI
       const { data: userData } = await supabase
         .from('users')
         .select('target_clusters')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
-      const userClusters = userData?.target_clusters || []
+      const userClusters: string[] = userData?.target_clusters || []
 
       const { data: uniData, error: uniError } = await supabase
         .from('universities')
@@ -111,29 +112,64 @@ export default function PracticePage() {
         .eq('university_id', universityId)
 
       if (areasError) throw areasError
-      if (!areas || areas.length === 0) throw new Error('No areas found for this university')
-
-      const areaIds = selectedAreas.length > 0 
-        ? areas.filter(a => selectedAreas.includes(a.code)).map(a => a.id)
-        : areas.map(a => a.id)
-
-      // Obtener clusters del usuario si es SIMADI y se selecciona especializacion
-      const hasEspecializacion = selectedAreas.includes('especializacion') && selectedUni === 'simadi'
-      const clusterCodes = hasEspecializacion ? userClusters : null
-
-      const { data: questions, error } = await supabase.rpc('get_random_questions', {
-        p_university_ids: [universityId],
-        p_area_ids: areaIds,
-        p_limit: questionCount,
-        p_exclude_ids: [],
-        p_cluster_codes: clusterCodes,
-      })
-
-      if (error) throw error
-
-      if (!questions || questions.length === 0) {
-        throw new Error('No hay preguntas disponibles para esta configuración')
+      if (!areas || areas.length === 0) {
+        throw new Error('Esta universidad todavía no tiene áreas configuradas')
       }
+
+      const chosenAreas = selectedAreas.length > 0
+        ? areas.filter(a => selectedAreas.includes(a.code))
+        : areas
+      const areaIds = chosenAreas.map(a => a.id)
+
+      // "especializacion" is the only area whose questions are tagged by cluster.
+      // Applying the cluster filter to the whole query would also drop every
+      // logico/verbal question (they have no cluster rows), so the two groups are
+      // fetched separately and merged.
+      const especializacion = selectedUni === 'simadi'
+        ? chosenAreas.find(a => a.code === 'especializacion')
+        : undefined
+      const clusterCodes = userClusters.length > 0 ? userClusters : null
+      const generalAreaIds = areaIds.filter(id => id !== especializacion?.id)
+
+      const fetchQuestions = async (ids: string[], clusters: string[] | null, limit: number) => {
+        if (ids.length === 0 || limit <= 0) return []
+        const { data, error: rpcError } = await supabase.rpc('get_random_questions', {
+          p_university_ids: [universityId],
+          p_area_ids: ids,
+          p_limit: limit,
+          p_exclude_ids: [],
+          p_cluster_codes: clusters,
+        })
+        if (rpcError) throw rpcError
+        return data ?? []
+      }
+
+      let questions: any[]
+      if (especializacion && generalAreaIds.length > 0) {
+        // Split the requested total proportionally between the two groups.
+        const espShare = Math.max(1, Math.round(questionCount / chosenAreas.length))
+        const [esp, general] = await Promise.all([
+          fetchQuestions([especializacion.id], clusterCodes, espShare),
+          fetchQuestions(generalAreaIds, null, questionCount - espShare),
+        ])
+        questions = [...esp, ...general]
+      } else if (especializacion) {
+        questions = await fetchQuestions([especializacion.id], clusterCodes, questionCount)
+      } else {
+        questions = await fetchQuestions(areaIds, null, questionCount)
+      }
+
+      if (questions.length === 0) {
+        throw new Error(
+          especializacion && clusterCodes
+            ? 'No hay preguntas para tu cluster de especialización. Revisa tu selección en Configuración.'
+            : 'No hay preguntas disponibles para esta configuración'
+        )
+      }
+
+      const uniqueQuestions = Array.from(
+        new Map(questions.map((q: any) => [q.id, q])).values()
+      )
 
       const { data: simulacrum, error: simError } = await supabase
         .from('simulacrums')
@@ -143,23 +179,20 @@ export default function PracticePage() {
           type: 'university',
           university_ids: [universityId],
           area_ids: areaIds,
-          total_questions: questions.length,
-          time_limit_minutes: Math.round(questionCount * 1.5),
+          // Both must reflect what was actually drawn, not what was requested:
+          // the bank may hold fewer questions than the slider asked for.
+          total_questions: uniqueQuestions.length,
+          time_limit_minutes: Math.max(1, Math.round(uniqueQuestions.length * 1.5)),
           status: 'in_progress',
+          // Without started_at the simulacrum page cannot compute the remaining
+          // time and the countdown stays frozen at 00:00.
+          started_at: new Date().toISOString(),
         })
         .select()
         .single()
 
       if (simError) throw simError
 
-      const uniqueQuestionsMap = new Map<string, any>()
-      for (const q of questions) {
-        if (!uniqueQuestionsMap.has(q.id)) {
-          uniqueQuestionsMap.set(q.id, q)
-        }
-      }
-      const uniqueQuestions = Array.from(uniqueQuestionsMap.values())
-      
       const simQuestions = uniqueQuestions.map((q: any, i: number) => ({
         simulacrum_id: simulacrum.id,
         question_id: q.id,
@@ -168,7 +201,7 @@ export default function PracticePage() {
 
       const { error: sqError } = await supabase
         .from('simulacrum_questions')
-        .upsert(simQuestions, { 
+        .upsert(simQuestions, {
           onConflict: 'simulacrum_id,question_id',
           ignoreDuplicates: true
         })
@@ -178,7 +211,7 @@ export default function PracticePage() {
       router.push(`/simulacrum/${simulacrum.id}`)
     } catch (err: any) {
       console.error('Error creating simulacrum:', err)
-      alert(`Error: ${err.message || err}\n\nDetalles:\n${JSON.stringify(err, null, 2)}`)
+      setError(err?.message || 'No se pudo crear el simulacro. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }
@@ -232,7 +265,7 @@ export default function PracticePage() {
                     Próximamente
                   </div>
                 )}
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 ${getUniversityColor(u.code).replace('text-', 'bg-')}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-3 ${getUniversityAccent(u.code)}`}>
                   <Brain className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="font-semibold text-white mb-1">{u.name}</h3>
@@ -350,6 +383,13 @@ export default function PracticePage() {
                     </span>
                   </div>
                 </div>
+
+                {error && (
+                  <div className="flex items-start gap-2 text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-2xl text-sm">
+                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                    <span>{error}</span>
+                  </div>
+                )}
 
                 <GlassButton
                   onClick={handleStartSimulacrum}

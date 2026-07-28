@@ -4,7 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard, GlassButton, GlassInput } from '@/components/ui/glass'
+import { useRouter } from 'next/navigation'
 import { useAuthStore, useUIStore } from '@/lib/store'
+import { useSession } from '@/lib/useSession'
 import {
   Brain, Save, CheckCircle2, Target, Moon, Download, Shield, Bell,
   AlertCircle, LogOut, Trash2, Lock, Sun, Monitor, ArrowRight,
@@ -21,15 +23,22 @@ const universities = [
   { code: 'ucab', name: 'UCAB' },
 ]
 
+// `available: false` = el cluster existe en la taxonomía pero todavía no tiene
+// preguntas enlazadas en question_clusters. Seleccionarlo produciría simulacros
+// vacíos, así que se muestra deshabilitado hasta que se cargue su banco.
 const simadiClusters = [
-  { code: 'salud', name: 'Salud', careers: ['Medicina', 'Enfermería', 'Bioanálisis', 'Odontología', 'Farmacia'] },
-  { code: 'agro_mar', name: 'Agro y Mar', careers: ['Agronomía', 'Veterinaria', 'Ingeniería Pesquera', 'Acuicultura'] },
-  { code: 'ciencia_tecnologia', name: 'Ciencia y Tecnología', careers: ['Ingenierías', 'Física', 'Química', 'Matemáticas', 'Computación'] },
-  { code: 'sociales_humanidades', name: 'Ciencias Sociales / Humanidades / Educación', careers: ['Derecho', 'Administración', 'Psicología', 'Educación', 'Comunicación Social', 'Sociología'] },
+  { code: 'salud', name: 'Salud', careers: ['Medicina', 'Enfermería', 'Bioanálisis', 'Odontología', 'Farmacia'], available: true },
+  { code: 'ciencia_tecnologia', name: 'Ciencia y Tecnología', careers: ['Ingenierías', 'Física', 'Química', 'Matemáticas', 'Computación'], available: true },
+  { code: 'sociales_humanidades', name: 'Ciencias Sociales / Humanidades / Educación', careers: ['Derecho', 'Administración', 'Psicología', 'Educación', 'Comunicación Social', 'Sociología'], available: true },
+  { code: 'agro_mar', name: 'Agro y Mar', careers: ['Agronomía', 'Veterinaria', 'Ingeniería Pesquera', 'Acuicultura'], available: false },
 ]
 
 export default function SettingsPage() {
-  const { user, setUser, clearUser } = useAuthStore()
+  const router = useRouter()
+  // Loads the profile straight from the DB instead of trusting whatever the
+  // persisted store happened to contain.
+  const { user, isLoading } = useSession('/auth/login?redirect=/settings')
+  const { setUser, clearUser } = useAuthStore()
   const { theme, setTheme } = useUIStore()
 
   const [fullName, setFullName] = useState('')
@@ -38,6 +47,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  const [saveError, setSaveError] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [showCurrentPass, setShowCurrentPass] = useState(false)
@@ -60,11 +70,12 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     if (!user) return
     setSaving(true)
+    setSaveError('')
     try {
       const { error } = await supabase
         .from('users')
-        .update({ 
-          full_name: fullName, 
+        .update({
+          full_name: fullName,
           target_universities: targetUnis,
           target_clusters: targetClusters
         })
@@ -75,7 +86,10 @@ export default function SettingsPage() {
       setSaved(true)
       setTimeout(() => setSaved(false), 3000)
     } catch (err: any) {
+      // The failure used to go only to the console, so a rejected save looked
+      // identical to a successful one.
       console.error('Error guardando:', err)
+      setSaveError(err?.message || 'No se pudieron guardar los cambios')
     } finally {
       setSaving(false)
     }
@@ -84,6 +98,7 @@ export default function SettingsPage() {
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     clearUser()
+    router.replace('/')
   }
 
   const handleThemeChange = (t: 'light' | 'dark' | 'system') => {
@@ -134,24 +149,39 @@ export default function SettingsPage() {
     if (!currentPassword || !user) return
     setDeleting(true)
     try {
-      // Verify password by trying to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email,
-        password: currentPassword,
+      // Deletion needs the service-role key, so it runs server-side.
+      const res = await fetch('/api/account', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: currentPassword }),
       })
-      if (signInError) throw signInError
 
-      // Delete user data (cascades should handle related tables)
-      await supabase.auth.admin.deleteUser(user.id)
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: null }))
+        throw new Error(error || 'No se pudo eliminar la cuenta')
+      }
+
+      await supabase.auth.signOut()
       clearUser()
+      router.replace('/')
     } catch (err: any) {
       console.error('Error eliminando cuenta:', err)
       alert(err.message || 'Error al eliminar la cuenta. Verifica tu contraseña.')
-    } finally {
       setDeleting(false)
       setShowDeleteConfirm(false)
       setCurrentPassword('')
     }
+  }
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="glass p-8 rounded-3xl text-center">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-blue-200/60">Cargando configuración...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -221,6 +251,7 @@ export default function SettingsPage() {
               )}
             </GlassButton>
             {saved && <p className="mt-3 text-sm text-emerald-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Perfil actualizado</p>}
+            {saveError && <p className="mt-3 text-sm text-red-400 flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {saveError}</p>}
           </div>
         </GlassCard>
 
@@ -277,18 +308,26 @@ export default function SettingsPage() {
               return (
                 <button
                   key={cluster.code}
+                  type="button"
+                  disabled={!cluster.available}
                   onClick={() => setTargetClusters(prev => prev.includes(cluster.code)
                     ? prev.filter(c => c !== cluster.code)
                     : [...prev, cluster.code])}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center gap-2 ${
-                    targetClusters.includes(cluster.code)
-                      ? 'border-primary bg-primary/10 ring-2 ring-primary/20'
-                      : 'border-white/[0.08] hover:border-primary/50 bg-white/[0.02]'
+                  className={`relative p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
+                    !cluster.available
+                      ? 'border-white/[0.06] bg-white/[0.01] opacity-50 cursor-not-allowed'
+                      : targetClusters.includes(cluster.code)
+                        ? 'border-primary bg-primary/10 ring-2 ring-primary/20 cursor-pointer'
+                        : 'border-white/[0.08] hover:border-primary/50 bg-white/[0.02] cursor-pointer'
                   }`}
                 >
-                  <Icon className="w-6 h-6 text-primary" />
+                  <Icon className={cn('w-6 h-6', cluster.available ? 'text-primary' : 'text-blue-300/40')} />
                   <p className="font-medium text-white text-sm text-center">{cluster.name}</p>
-                  <p className="text-xs text-gray-400 text-center">{cluster.careers.slice(0, 2).join(', ')}...</p>
+                  <p className="text-xs text-blue-300/40 text-center">
+                    {cluster.available
+                      ? `${cluster.careers.slice(0, 2).join(', ')}...`
+                      : 'Banco en preparación'}
+                  </p>
                 </button>
               )
             })}
@@ -399,7 +438,7 @@ export default function SettingsPage() {
                 </p>
                 <GlassInput
                   label="Escribe tu contraseña actual para confirmar"
-                  type={showCurrentPass ? 'text' : 'password'}
+                  type="password"
                   value={currentPassword}
                   onChange={e => setCurrentPassword(e.target.value)}
                   placeholder="••••••••"

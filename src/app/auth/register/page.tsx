@@ -10,11 +10,13 @@ import { Brain, Mail, Lock, User, Eye, EyeOff, Loader2, CheckCircle2, AlertCircl
 
 export const dynamic = 'force-dynamic'
 
+// Tailwind class names must appear literally in the source — the JIT compiler
+// scans files as plain text, so `bg-${color}-900/30` produced no CSS at all.
 const UNIVERSITIES = [
-  { code: 'simadi', name: 'SIMADI (UCV)', description: 'Razonamiento Lógico + Verbal', color: 'red' },
-  { code: 'unimet', name: 'UNIMET', description: 'Aptitud Cuantitativa + Verbal', color: 'blue' },
-  { code: 'usb', name: 'USB', description: 'Habilidades + Conocimientos', color: 'green', disabled: true },
-  { code: 'ucab', name: 'UCAB', description: 'Numérica + Verbal (19 carreras)', color: 'yellow', disabled: true },
+  { code: 'simadi', name: 'SIMADI (UCV)', description: 'Razonamiento Lógico + Verbal + Especialización', iconBg: 'bg-red-900/30', iconText: 'text-red-400' },
+  { code: 'unimet', name: 'UNIMET', description: 'Aptitud Cuantitativa + Verbal', iconBg: 'bg-blue-900/30', iconText: 'text-blue-400' },
+  { code: 'usb', name: 'USB', description: 'Habilidades + Conocimientos', iconBg: 'bg-green-900/30', iconText: 'text-green-400' },
+  { code: 'ucab', name: 'UCAB', description: 'Verbal + Numérica + Lógico', iconBg: 'bg-amber-900/30', iconText: 'text-amber-400' },
 ]
 
 export default function RegisterPage() {
@@ -65,33 +67,39 @@ export default function RegisterPage() {
           options: {
             data: {
               full_name: fullName,
+              target_universities: selectedUniversities,
             },
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         })
 
         if (error) throw error
 
         if (data.user) {
-          const { error: profileError } = await supabase
-            .from('users')
-            .insert({
+          if (data.session) {
+            // The public.users row is created by the on_auth_user_created
+            // trigger, so this only fills in the choices made on step 2.
+            // It needs a session — when email confirmation is on there is none
+            // yet, and the old unconditional INSERT failed RLS and reported a
+            // scary error for what was actually a successful signup.
+            const { error: profileError } = await supabase
+              .from('users')
+              .update({
+                full_name: fullName,
+                target_universities: selectedUniversities,
+              })
+              .eq('id', data.user.id)
+
+            if (profileError) console.error('No se pudo guardar el perfil:', profileError)
+
+            setUser({
               id: data.user.id,
               email: data.user.email!,
               full_name: fullName,
               target_universities: selectedUniversities,
+              target_clusters: [],
             })
-
-          if (profileError) throw profileError
-
-          setUser({
-            id: data.user.id,
-            email: data.user.email!,
-            full_name: fullName,
-            target_universities: selectedUniversities,
-          })
-          setTargetUniversities(selectedUniversities)
-
-          if (data.session) {
+            setTargetUniversities(selectedUniversities)
             router.push('/dashboard')
           } else {
             setSuccess('¡Cuenta creada! Revisa tu email para confirmar tu cuenta. (Revisa también la carpeta de spam)')
@@ -236,17 +244,15 @@ export default function RegisterPage() {
                     <button
                       key={uni.code}
                       type="button"
-                      onClick={() => !uni.disabled && toggleUniversity(uni.code)}
-                      disabled={uni.disabled}
+                      onClick={() => toggleUniversity(uni.code)}
                       className={`w-full relative p-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-4 ${
                         selectedUniversities.includes(uni.code)
                           ? 'border-primary bg-primary/10'
                           : 'border-white/[0.08] hover:border-primary/50'
-                        } ${uni.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-                      `}
+                      }`}
                     >
-                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center bg-${uni.color}-900/30`}>
-                        <Brain className={`w-5 h-5 text-${uni.color}-400`} />
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${uni.iconBg}`}>
+                        <Brain className={`w-5 h-5 ${uni.iconText}`} />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium text-white">{uni.name}</p>

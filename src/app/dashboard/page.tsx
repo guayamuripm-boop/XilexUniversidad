@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/glass'
-import { useAuthStore } from '@/lib/store'
+import { useSession } from '@/lib/useSession'
 import { 
   Brain, 
   Target, 
@@ -23,7 +23,7 @@ import {
   Sparkles,
   CheckCircle2
 } from 'lucide-react'
-import { formatTime, cn, getMasteryColor } from '@/lib/utils'
+import { formatDuration, cn, getMasteryColor } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -78,7 +78,7 @@ interface ProgressData {
 }
 
 export default function DashboardPage() {
-  const { user, setUser, clearUser } = useAuthStore()
+  const { user, status } = useSession()
   const [simulacrums, setSimulacrums] = useState<Simulacrum[]>([])
   const [progress, setProgress] = useState<ProgressData[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,63 +88,65 @@ export default function DashboardPage() {
     studyTime: 0,
   })
 
-  const supabase = createClient()
-
   useEffect(() => {
-    const loadData = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data: sims } = await supabase
-        .from('simulacrums')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10)
-
-      if (sims) {
-        setSimulacrums(sims)
-        const completed = sims.filter(s => s.status === 'completed')
-        if (completed.length > 0) {
-          const avgScore = completed.reduce((sum, s) => sum + (s.score || 0), 0) / completed.length
-          const totalQ = completed.reduce((sum, s) => sum + s.total_questions, 0)
-          const totalTime = completed.reduce((sum, s) => sum + s.time_limit_minutes, 0)
-          setStats({ avgScore, totalQuestions: totalQ, studyTime: totalTime })
-        }
-      }
-
-      const { data: prog } = await supabase
-        .from('user_progress')
-        .select(`
-          *,
-          subtopic:subtopics (id, name, area:areas (id, name, code)),
-          university:universities (id, name, code),
-          area:areas (id, name, code)
-        `)
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false })
-
-      if (prog) setProgress(prog)
+    if (status === 'loading') return
+    if (status === 'anonymous') {
       setLoading(false)
+      return
+    }
+
+    const supabase = createClient()
+    let cancelled = false
+
+    const loadData = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (!authUser || cancelled) return
+
+        const [{ data: sims }, { data: prog }] = await Promise.all([
+          supabase
+            .from('simulacrums')
+            .select('*')
+            .eq('user_id', authUser.id)
+            .order('created_at', { ascending: false })
+            .limit(10),
+          supabase
+            .from('user_progress')
+            .select(`
+              *,
+              subtopic:subtopics (id, name, area:areas (id, name, code)),
+              university:universities (id, name, code),
+              area:areas (id, name, code)
+            `)
+            .eq('user_id', authUser.id)
+            .order('updated_at', { ascending: false }),
+        ])
+
+        if (cancelled) return
+
+        if (sims) {
+          setSimulacrums(sims)
+          const completed = sims.filter(s => s.status === 'completed')
+          if (completed.length > 0) {
+            const avgScore = completed.reduce((sum, s) => sum + (s.score || 0), 0) / completed.length
+            const totalQ = completed.reduce((sum, s) => sum + s.total_questions, 0)
+            const totalTime = completed.reduce((sum, s) => sum + s.time_limit_minutes, 0)
+            setStats({ avgScore, totalQuestions: totalQ, studyTime: totalTime })
+          }
+        }
+        if (prog) setProgress(prog)
+      } catch (err) {
+        console.error('Error loading dashboard:', err)
+      } finally {
+        // Always clear the spinner — a bare `return` here used to leave the
+        // dashboard stuck on "Cargando..." forever.
+        if (!cancelled) setLoading(false)
+      }
     }
 
     loadData()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') {
-        clearUser()
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        setUser({
-          id: session.user.id,
-          email: session.user.email!,
-          full_name: session.user.user_metadata.full_name || null,
-          target_universities: [],
-        })
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [setUser, clearUser])
+    return () => { cancelled = true }
+  }, [status])
 
   const getRecentActivity = () => {
     return simulacrums.slice(0, 5).map(s => ({
@@ -300,7 +302,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-xs text-blue-300/40 mb-1">Tiempo</p>
                   <p className="text-2xl sm:text-3xl font-bold text-white">
-                    {formatTime(stats.studyTime * 60)}
+                    {formatDuration(stats.studyTime)}
                   </p>
                 </div>
                 <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-accent-amber/10 flex items-center justify-center">

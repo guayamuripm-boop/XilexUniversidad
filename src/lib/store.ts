@@ -73,13 +73,29 @@ export const useSimulacrumStore = create<SimulacrumState>()(
       timeRemaining: 0,
       isActive: false,
 
-      setSimulacrum: (simulacrum, questions) => set({
-        currentSimulacrum: simulacrum,
-        questions,
-        currentQuestionIndex: 0,
-        answers: {},
-        timeRemaining: simulacrum.time_limit_minutes * 60,
-        isActive: true,
+      // Loading a simulacrum must not destroy work in progress. Answers already
+      // persisted in the DB are the baseline; any local answers for the *same*
+      // simulacrum (e.g. a mid-exam page refresh) are layered on top of them.
+      setSimulacrum: (simulacrum, questions) => set((state) => {
+        const isSameSimulacrum = state.currentSimulacrum?.id === simulacrum.id
+
+        const answers: Record<string, string> = {}
+        for (const q of questions) {
+          if (q.user_answer) answers[q.question_id] = q.user_answer
+        }
+        if (isSameSimulacrum) Object.assign(answers, state.answers)
+
+        return {
+          currentSimulacrum: simulacrum,
+          questions,
+          currentQuestionIndex: isSameSimulacrum
+            ? Math.min(state.currentQuestionIndex, Math.max(0, questions.length - 1))
+            : 0,
+          answers,
+          // The page recomputes the real remaining time from started_at.
+          timeRemaining: isSameSimulacrum ? state.timeRemaining : simulacrum.time_limit_minutes * 60,
+          isActive: simulacrum.status === 'in_progress',
+        }
       }),
 
       setAnswer: (questionId, answer) => set((state) => ({
@@ -161,10 +177,18 @@ export const useUIStore = create<UIState>()(
   )
 )
 
+export interface AuthUser {
+  id: string
+  email: string
+  full_name: string | null
+  target_universities: string[]
+  target_clusters: string[]
+}
+
 interface AuthState {
-  user: { id: string; email: string; full_name: string | null; target_universities: string[] } | null
+  user: AuthUser | null
   targetUniversities: string[]
-  setUser: (user: AuthState['user']) => void
+  setUser: (user: AuthUser | null) => void
   setTargetUniversities: (universities: string[]) => void
   clearUser: () => void
 }

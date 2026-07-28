@@ -48,27 +48,42 @@ export default function SimulacrumsPage() {
   const supabase = createClient()
 
   useEffect(() => {
+    let cancelled = false
+
     const loadSimulacrums = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (cancelled) return
+        if (!user) {
+          setSimulacrums([])
+          return
+        }
 
-      const { data: sims } = await supabase
-        .from('simulacrums')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        const { data: sims } = await supabase
+          .from('simulacrums')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
 
-      if (sims) setSimulacrums(sims)
-      setLoading(false)
+        if (!cancelled && sims) setSimulacrums(sims)
+      } catch (err) {
+        console.error('Error loading simulacrums:', err)
+      } finally {
+        // Must run even for anonymous visitors, otherwise the spinner never ends.
+        if (!cancelled) setLoading(false)
+      }
     }
 
     loadSimulacrums()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      loadSimulacrums()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') loadSimulacrums()
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [supabase])
 
   const filteredSimulacrums = simulacrums.filter((s) => {

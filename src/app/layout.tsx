@@ -1,11 +1,16 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
 import './globals.css'
 import { VersionBadge } from '@/components/VersionBadge'
 
-const inter = { 
-  className: 'font-inter',
+// Previously a hand-rolled `{ className, variable }` object, which put the raw
+// string "--font-inter" in the html class list and loaded no font at all, so
+// tailwind's `font-sans` (var(--font-inter)) always fell through to system-ui.
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
   variable: '--font-inter',
-}
+})
 
 export const metadata: Metadata = {
   title: 'XILEX - Práctica SIMADI, UNIMET, USB, UCAB',
@@ -20,11 +25,11 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0f1117',
+  themeColor: '#0a1929',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // maximumScale/userScalable were locked to 1/false, which blocks pinch-zoom.
+  // Students read dense question text on phones; they must be able to zoom.
 }
 
 export default function RootLayout({
@@ -34,11 +39,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={`${inter.variable} antialiased dark`} suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="min-h-screen bg-graphite-950 text-graphite-200">
+      {/* Background and text colours live in globals.css; the previous
+          bg-graphite-950 / text-graphite-200 classes referenced a palette that
+          does not exist in tailwind.config.js and generated no CSS. */}
+      <body className="min-h-screen">
         {children}
         <VersionBadge />
       </body>

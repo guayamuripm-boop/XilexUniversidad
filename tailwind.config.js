@@ -1,5 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  // The app forces its dark palette via the `dark` class on <html>. Without
+  // this, tailwind's default 'media' strategy made every `dark:` utility follow
+  // the OS setting instead — so on a light-themed OS the mastery/difficulty
+  // badges rendered light-on-light against the dark UI.
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',

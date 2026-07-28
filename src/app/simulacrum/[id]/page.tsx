@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -69,7 +69,17 @@ export default function SimulacrumPage() {
 
   const supabase = createClient()
 
+  // Absolute end time (ms epoch). Deriving the countdown from a deadline instead
+  // of decrementing a counter keeps it accurate when the tab is backgrounded and
+  // the browser throttles timers.
+  const deadlineRef = useRef<number | null>(null)
+  // Lets the interval call the current submit function without re-creating the
+  // interval on every tick.
+  const submitRef = useRef<() => Promise<void>>()
+
   useEffect(() => {
+    let cancelled = false
+
     const loadSimulacrum = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -87,41 +97,51 @@ export default function SimulacrumPage() {
 
         if (error) throw error
         if (!simData) throw new Error('Simulacro no encontrado')
+        if (cancelled) return
 
-        const sorted = simData.simulacrum_questions
-          .sort((a: any, b: any) => a.order_index - b.order_index)
-          .map((sq: any) => ({ ...sq, question: sq.question })) as SimulacrumQuestion[]
+        const sorted = (simData.simulacrum_questions as any[])
+          .filter((sq) => sq.question)
+          .sort((a, b) => a.order_index - b.order_index) as SimulacrumQuestion[]
 
         setSimulacrum(simData, sorted)
 
         if (simData.status === 'in_progress' && simData.started_at) {
-          const elapsed = Math.floor((Date.now() - new Date(simData.started_at).getTime()) / 1000)
-          const total = simData.time_limit_minutes * 60
-          setTimeRemaining(Math.max(0, total - elapsed))
+          const deadline = new Date(simData.started_at).getTime() + simData.time_limit_minutes * 60_000
+          deadlineRef.current = deadline
+          setTimeRemaining(Math.max(0, Math.round((deadline - Date.now()) / 1000)))
           setActive(true)
+        } else {
+          deadlineRef.current = null
+          setActive(false)
         }
       } catch (err) {
         console.error('Error loading simulacrum:', err)
         router.push('/dashboard')
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
+
     loadSimulacrum()
+    return () => { cancelled = true }
   }, [simulacrumId, setSimulacrum, setTimeRemaining, setActive, router, supabase])
 
   useEffect(() => {
-    if (!isActive || timeRemaining <= 0) return
-    const interval = setInterval(() => {
-      if (timeRemaining <= 1) {
+    if (!isActive || deadlineRef.current === null) return
+
+    const tick = () => {
+      const remaining = Math.max(0, Math.round((deadlineRef.current! - Date.now()) / 1000))
+      setTimeRemaining(remaining)
+      if (remaining === 0) {
         setActive(false)
-        submitSimulacrum()
-      } else {
-        setTimeRemaining(timeRemaining - 1)
+        submitRef.current?.()
       }
-    }, 1000)
+    }
+
+    tick()
+    const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [isActive, timeRemaining, setTimeRemaining, setActive])
+  }, [isActive, setTimeRemaining, setActive])
 
   const currentQuestion = questions[currentQuestionIndex]
   const progress = getProgress()
@@ -129,7 +149,17 @@ export default function SimulacrumPage() {
 
   const handleAnswer = useCallback((questionId: string, answer: string) => {
     setAnswer(questionId, answer)
-  }, [setAnswer])
+    // Persist immediately so a refresh, crash or device switch mid-exam does not
+    // lose the answer. `is_correct` is only computed on submit.
+    supabase
+      .from('simulacrum_questions')
+      .update({ user_answer: answer, answered_at: new Date().toISOString() })
+      .eq('simulacrum_id', simulacrumId)
+      .eq('question_id', questionId)
+      .then(({ error }) => {
+        if (error) console.error('No se pudo guardar la respuesta:', error)
+      })
+  }, [setAnswer, supabase, simulacrumId])
 
   const handleNext = useCallback(() => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -147,15 +177,23 @@ export default function SimulacrumPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      await supabase.from('simulacrums').update({ status: 'in_progress', started_at: new Date().toISOString() }).eq('id', simulacrumId)
+      const startedAt = new Date()
+      const { error } = await supabase
+        .from('simulacrums')
+        .update({ status: 'in_progress', started_at: startedAt.toISOString() })
+        .eq('id', simulacrumId)
+      if (error) throw error
+
+      const limit = currentSimulacrum?.time_limit_minutes ?? 0
+      deadlineRef.current = startedAt.getTime() + limit * 60_000
+      setTimeRemaining(limit * 60)
       setActive(true)
-      setTimeRemaining(currentSimulacrum?.time_limit_minutes ? currentSimulacrum.time_limit_minutes * 60 : 0)
     } catch (err) {
       console.error('Error starting:', err)
     }
   }
 
-  const submitSimulacrum = async () => {
+  const submitSimulacrum = useCallback(async () => {
     if (submitting) return
     setSubmitting(true)
     try {
@@ -165,21 +203,26 @@ export default function SimulacrumPage() {
       let correct = 0
       let incorrect = 0
       let unanswered = 0
+      const now = new Date().toISOString()
+
       const sqUpdates = simQuestions.map((sq, index) => {
-        const userAnswer = answers[sq.question_id]
-        const isCorrect = userAnswer === sq.question.correct_answer
-        if (userAnswer === undefined) {
-          unanswered++
-        } else if (isCorrect) {
-          correct++
-        } else {
-          incorrect++
-        }
+        const userAnswer = answers[sq.question_id] ?? null
+        // An unanswered question is neither correct nor incorrect; writing
+        // `false` there made the results screen count blanks as wrong answers.
+        const isCorrect = userAnswer === null ? null : userAnswer === sq.question.correct_answer
+
+        if (userAnswer === null) unanswered++
+        else if (isCorrect) correct++
+        else incorrect++
+
         return {
-          simulacrum_id: simulacrumId, question_id: sq.question_id,
-          user_answer: userAnswer || null, is_correct: isCorrect,
-          answered_at: userAnswer ? new Date().toISOString() : null,
-          time_spent_seconds: 0, order_index: index,
+          simulacrum_id: simulacrumId,
+          question_id: sq.question_id,
+          user_answer: userAnswer,
+          is_correct: isCorrect,
+          answered_at: userAnswer ? now : null,
+          time_spent_seconds: sq.time_spent_seconds ?? 0,
+          order_index: index,
         }
       })
 
@@ -187,43 +230,45 @@ export default function SimulacrumPage() {
         .from('simulacrum_questions')
         .upsert(sqUpdates, { onConflict: 'simulacrum_id,question_id', ignoreDuplicates: false })
 
-      if (upsertErr) {
-        console.error('Upsert error, falling back to individual updates:', upsertErr)
-        for (const u of sqUpdates) {
-          const { error } = await supabase.from('simulacrum_questions')
-            .update({ user_answer: u.user_answer, is_correct: u.is_correct, answered_at: u.answered_at, time_spent_seconds: u.time_spent_seconds })
-            .eq('simulacrum_id', simulacrumId).eq('question_id', u.question_id)
-          if (error) console.error('Individual update error:', error)
-        }
-      }
+      if (upsertErr) throw upsertErr
 
       const score = simQuestions.length > 0 ? (correct / simQuestions.length) * 100 : 0
       const { error: simErr } = await supabase.from('simulacrums').update({
-        status: 'completed', score, correct_count: correct,
+        status: 'completed',
+        score: Number(score.toFixed(2)),
+        correct_count: correct,
         incorrect_count: incorrect,
-        unanswered_count: unanswered, completed_at: new Date().toISOString(),
+        unanswered_count: unanswered,
+        completed_at: now,
       }).eq('id', simulacrumId)
 
       if (simErr) throw simErr
 
-      for (const sq of simQuestions) {
-        const userAnswer = answers[sq.question_id]
-        if (userAnswer) {
-          await supabase.rpc('update_user_progress', {
-            p_user_id: user.id, p_question_id: sq.question_id,
-            p_is_correct: userAnswer === sq.question.correct_answer, p_time_spent_seconds: 0,
-          })
-        }
-      }
+      // Per-subtopic mastery. Sequential awaits here made a 90-question exam fire
+      // 90 round trips before the results screen appeared.
+      await Promise.all(
+        simQuestions
+          .filter(sq => answers[sq.question_id])
+          .map(sq => supabase.rpc('update_user_progress', {
+            p_user_id: user.id,
+            p_question_id: sq.question_id,
+            p_is_correct: answers[sq.question_id] === sq.question.correct_answer,
+            p_time_spent_seconds: sq.time_spent_seconds ?? 0,
+          }))
+      )
 
       reset()
       window.location.href = `/simulacrum/${simulacrumId}`
     } catch (err) {
       console.error('Error submitting:', err)
-      alert('Error al enviar. Intenta de nuevo.')
+      alert('Error al enviar el simulacro. Tus respuestas siguen guardadas — intenta de nuevo.')
       setSubmitting(false)
     }
-  }
+  }, [submitting, supabase, simQuestions, answers, simulacrumId, reset])
+
+  useEffect(() => {
+    submitRef.current = submitSimulacrum
+  }, [submitSimulacrum])
 
   if (loading) {
     return (
@@ -632,8 +677,10 @@ export default function SimulacrumPage() {
         </div>
       </div>
 
-      {/* Draft start overlay */}
-      {!isActive && currentSimulacrum.status === 'draft' && (
+      {/* Start overlay. Reached by drafts and by legacy `in_progress` rows that
+          were created without a started_at and so have no running clock.
+          (Completed simulacrums returned above, in the results view.) */}
+      {!isActive && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-deep-950/80 backdrop-blur-sm px-6">
           <GlassCard className="p-8 text-center rounded-3xl max-w-sm w-full" hover={false}>
             <Brain className="w-14 h-14 mx-auto mb-4 text-primary" />

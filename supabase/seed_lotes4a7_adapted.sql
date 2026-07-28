@@ -8,19 +8,32 @@
 
 -- ============================================================
 -- PASO 1: Eliminar preguntas generadas anteriormente
--- (seed_lote4_5_6_7.sql — source_type = 'generated_pattern' 
+-- (seed_lote4_5_6_7.sql — source_type = 'generated_pattern'
 --  sin el formato de referencia 'Patron ... (id_original ...)')
 -- ============================================================
-DELETE FROM user_answers WHERE question_id IN (
-  SELECT id FROM questions WHERE source_type = 'generated_pattern'
-  AND source_reference NOT LIKE '%(id_original%'
-);
+--
+-- CORRECCIONES respecto a la versión anterior de este bloque:
+--
+--  a) Borraba de `user_answers`, tabla que no existe en el esquema. El script
+--     entero abortaba en su primera sentencia, por lo que estos lotes nunca
+--     llegaron a cargarse.
+--
+--  b) El filtro alcanzaba también a las 105 preguntas de especialización
+--     (source_reference = 'especializacion_csv_NNN', que tampoco contiene
+--     '(id_original'), así que de haberse ejecutado habría destruido el banco
+--     de la Fase 2. Ahora se excluyen explícitamente.
+-- ============================================================
 DELETE FROM simulacrum_questions WHERE question_id IN (
-  SELECT id FROM questions WHERE source_type = 'generated_pattern'
-  AND source_reference NOT LIKE '%(id_original%'
+  SELECT id FROM questions
+  WHERE source_type = 'generated_pattern'
+    AND source_reference NOT LIKE '%(id_original%'
+    AND source_reference NOT LIKE 'especializacion_csv_%'
 );
-DELETE FROM questions WHERE source_type = 'generated_pattern'
-  AND source_reference NOT LIKE '%(id_original%';
+
+DELETE FROM questions
+WHERE source_type = 'generated_pattern'
+  AND source_reference NOT LIKE '%(id_original%'
+  AND source_reference NOT LIKE 'especializacion_csv_%';
 
 -- ============================================================
 -- LOTE 4: UCV / SIMADI (197 preguntas)

@@ -42,8 +42,16 @@ interface StreakData {
   last_activity_date: string | null
 }
 
+interface CompletedSimulacrum {
+  score: number | null
+  correct_count: number | null
+  total_questions: number
+  completed_at: string | null
+}
+
 export default function ProgressPage() {
   const [progress, setProgress] = useState<ProgressRow[]>([])
+  const [recentSims, setRecentSims] = useState<CompletedSimulacrum[]>([])
   const [streak, setStreak] = useState<StreakData>({ current_streak: 0, longest_streak: 0, last_activity_date: null })
   const [loading, setLoading] = useState(true)
   const [filterUni, setFilterUni] = useState('all')
@@ -58,12 +66,24 @@ export default function ProgressPage() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
-        const [{ data: progData, error: progError }, { data: streakData, error: streakError }] = await Promise.all([
+        const sinceIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+        const [
+          { data: progData, error: progError },
+          { data: simData },
+          { data: streakData, error: streakError },
+        ] = await Promise.all([
           supabase
             .from('user_progress')
             .select(`*, university:universities(id, name, code), area:areas(id, name, code), subtopic:subtopics(id, name)`)
             .eq('user_id', user.id)
             .order('last_attempted_at', { ascending: false }),
+          supabase
+            .from('simulacrums')
+            .select('score, correct_count, total_questions, completed_at')
+            .eq('user_id', user.id)
+            .eq('status', 'completed')
+            .gte('completed_at', sinceIso),
           supabase.rpc('get_user_streak', { p_user_id: user.id })
         ])
 
@@ -72,6 +92,7 @@ export default function ProgressPage() {
         else if (streakData?.[0]) setStreak(streakData[0])
 
         setProgress(progData ?? [])
+        setRecentSims(simData ?? [])
       } catch (err) {
         console.error('Error loading progress:', err)
       } finally {
@@ -115,6 +136,10 @@ export default function ProgressPage() {
       .slice(0, 5)
   }, [progress])
 
+  // Daily accuracy comes from simulacrums completed that day. The previous
+  // version bucketed user_progress rows by last_attempted_at and then summed
+  // their *lifetime* totals, so a single practice session made every past
+  // attempt count as if it had happened today.
   const accuracyTrend = useMemo(() => {
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date()
@@ -123,16 +148,16 @@ export default function ProgressPage() {
     })
 
     return last7Days.map(date => {
-      const dayProgress = progress.filter(p => p.last_attempted_at?.startsWith(date))
-      const attempts = dayProgress.reduce((sum, p) => sum + p.total_attempts, 0)
-      const correct = dayProgress.reduce((sum, p) => sum + p.correct_attempts, 0)
+      const daySims = recentSims.filter(s => s.completed_at?.startsWith(date))
+      const questions = daySims.reduce((sum, s) => sum + s.total_questions, 0)
+      const correct = daySims.reduce((sum, s) => sum + (s.correct_count ?? 0), 0)
       return {
-        date: new Date(date).toLocaleDateString('es-VE', { weekday: 'short', day: '2-digit', month: '2-digit' }),
-        accuracy: attempts > 0 ? Math.round((correct / attempts) * 100) : 0,
-        attempts,
+        date: new Date(`${date}T00:00:00`).toLocaleDateString('es-VE', { weekday: 'short', day: '2-digit', month: '2-digit' }),
+        accuracy: questions > 0 ? Math.round((correct / questions) * 100) : 0,
+        attempts: questions,
       }
     })
-  }, [progress])
+  }, [recentSims])
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -376,6 +401,7 @@ export default function ProgressPage() {
                 <option value="all">Todas las áreas</option>
                 <option value="logico">Razonamiento Lógico</option>
                 <option value="verbal">Razonamiento Verbal</option>
+                <option value="especializacion">Especialización</option>
                 <option value="cuantitativo">Aptitud Cuantitativa</option>
                 <option value="habilidades">Habilidades</option>
                 <option value="conocimientos">Conocimientos</option>

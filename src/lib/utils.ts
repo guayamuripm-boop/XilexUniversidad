@@ -5,9 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/** Countdown display: `m:ss`, or `h:mm:ss` once past an hour. Never negative. */
 export function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60)
-  const secs = seconds % 60
+  const total = Math.max(0, Math.floor(seconds))
+  const hours = Math.floor(total / 3600)
+  const mins = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+  if (hours > 0) {
+    return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
   return `${mins}:${secs.toString().padStart(2, '0')}`
 }
 
@@ -50,6 +56,23 @@ export function getUniversityColor(code: string): string {
     ucab: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   }
   return colors[code] || colors.simadi
+}
+
+/**
+ * Solid badge/tile background for a university.
+ *
+ * Kept separate from `getUniversityColor` (a light/dark text+bg pair): callers
+ * used to derive this by string-replacing "text-" inside that pair, which only
+ * replaced the first match and produced two conflicting background classes.
+ */
+export function getUniversityAccent(code: string): string {
+  const colors: Record<string, string> = {
+    simadi: 'bg-red-500/80',
+    unimet: 'bg-blue-500/80',
+    usb: 'bg-green-500/80',
+    ucab: 'bg-amber-500/80',
+  }
+  return colors[code] || 'bg-primary/80'
 }
 
 export function getUniversityName(code: string): string {

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { GlassCard, GlassButton } from '@/components/ui/glass'
@@ -16,11 +16,13 @@ const features = [
   { icon: Users, title: 'Acceso Libre', desc: 'Cualquier bachiller venezolano puede practicar sin barreras.', color: 'accent-violet' },
 ]
 
+// Las cuatro tienen banco de preguntas cargado y áreas configuradas en la base;
+// USB y UCAB seguían marcadas como "Proximamente" aunque ya eran practicables.
 const universities = [
-  { code: 'simadi', name: 'SIMADI (UCV)', areas: ['Logico', 'Verbal'], active: true },
+  { code: 'simadi', name: 'SIMADI (UCV)', areas: ['Logico', 'Verbal', 'Especializacion'], active: true },
   { code: 'unimet', name: 'UNIMET', areas: ['Cuantitativo', 'Verbal'], active: true },
-  { code: 'usb', name: 'USB', areas: ['Habilidades', 'Conocimientos'], active: false },
-  { code: 'ucab', name: 'UCAB', areas: ['Numerica', 'Verbal'], active: false },
+  { code: 'usb', name: 'USB', areas: ['Habilidades', 'Conocimientos'], active: true },
+  { code: 'ucab', name: 'UCAB', areas: ['Verbal', 'Numerica', 'Logico'], active: true },
 ]
 
 export default function HomePage() {
@@ -209,10 +211,10 @@ export default function HomePage() {
                       ))}
                     </div>
                     <p className="text-sm text-blue-300/30">
-                      {uni.code === 'simadi' && 'Razonamiento logico y verbal. 60 preguntas, 90 min.'}
-                      {uni.code === 'unimet' && 'Aptitud Cuantitativa + Verbal. 90 preguntas.'}
-                      {uni.code === 'usb' && 'Proximamente: Habilidades + Conocimientos.'}
-                      {uni.code === 'ucab' && 'Proximamente: Numerica + Verbal.'}
+                      {uni.code === 'simadi' && 'Razonamiento logico y verbal + bloque de especializacion por cluster.'}
+                      {uni.code === 'unimet' && 'Aptitud Cuantitativa + Verbal. 90 preguntas, 120 min.'}
+                      {uni.code === 'usb' && 'Habilidades + Conocimientos. 100 preguntas, 120 min.'}
+                      {uni.code === 'ucab' && 'Verbal + Numerica + Logico. 100 preguntas, 120 min.'}
                     </p>
                   </div>
                 </div>

@@ -207,6 +207,12 @@
     to { opacity: 1; transform: scale(1); }
   }
 
+  /* Used by the simulacrum bottom bar. Without this the "Finalizar" button sits
+     under the iOS home indicator. */
+  .safe-area-bottom {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

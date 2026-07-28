@@ -239,14 +239,23 @@ CREATE TRIGGER update_simad_clusters_updated_at BEFORE UPDATE ON simad_clusters
 -- FUNCTIONS
 -- ============================================================
 
--- Get random questions for simulacrum generation
+-- Get random questions for simulacrum generation.
+--
+-- NOTE: p_limit must come before the parameters that carry a DEFAULT.
+-- PostgreSQL rejects a required parameter after an optional one
+-- ("input parameters after one with a default value must also have defaults"),
+-- so the earlier ordering meant this function was never created.
+--
+-- The cluster-aware version (p_cluster_codes), which is what the app actually
+-- calls, lives in migrations/20260727000000_fix_functions_and_triggers.sql and
+-- supersedes this definition.
 CREATE OR REPLACE FUNCTION get_random_questions(
   p_university_ids UUID[],
   p_area_ids UUID[],
+  p_limit INTEGER,
   p_subtopic_ids UUID[] DEFAULT NULL,
   p_difficulty question_difficulty DEFAULT NULL,
-  p_exclude_ids UUID[] DEFAULT '{}',
-  p_limit INTEGER
+  p_exclude_ids UUID[] DEFAULT '{}'
 )
 RETURNS SETOF questions LANGUAGE plpgsql AS $$
 BEGIN

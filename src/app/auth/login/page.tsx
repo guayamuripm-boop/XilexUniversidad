@@ -13,14 +13,21 @@ export const dynamic = 'force-dynamic'
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/dashboard'
+  // Only same-origin relative paths, so `?redirect=` cannot bounce the user to
+  // an attacker-controlled host after a successful login.
+  const requestedRedirect = searchParams.get('redirect') || '/dashboard'
+  const redirect = requestedRedirect.startsWith('/') && !requestedRedirect.startsWith('//')
+    ? requestedRedirect
+    : '/dashboard'
   const { setUser, setTargetUniversities } = useAuthStore()
   
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  // Surfaces failures bounced back here by /auth/callback (expired link, denied
+  // OAuth consent, ...) instead of dropping the user on a silent login screen.
+  const [error, setError] = useState(searchParams.get('error') || '')
   const [success, setSuccess] = useState('')
 
   const supabase = createClient()
@@ -40,25 +47,26 @@ function LoginForm() {
 
       if (data.user) {
         if (!data.user.email_confirmed_at) {
+          // signInWithPassword already created a session; drop it so the app is
+          // not left in a half-authenticated state.
+          await supabase.auth.signOut()
           setError('Confirma tu email antes de iniciar sesión. Revisa tu bandeja de entrada (y spam).')
           return
         }
+        const { data: profile } = await supabase
+          .from('users')
+          .select('full_name, target_universities, target_clusters')
+          .eq('id', data.user.id)
+          .maybeSingle()
+
         setUser({
           id: data.user.id,
           email: data.user.email!,
-          full_name: data.user.user_metadata.full_name || null,
-          target_universities: [],
+          full_name: profile?.full_name ?? data.user.user_metadata.full_name ?? null,
+          target_universities: profile?.target_universities ?? [],
+          target_clusters: profile?.target_clusters ?? [],
         })
-
-        const { data: profile } = await supabase
-          .from('users')
-          .select('target_universities')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profile) {
-          setTargetUniversities(profile.target_universities || [])
-        }
+        setTargetUniversities(profile?.target_universities ?? [])
 
         setSuccess('¡Bienvenido! Redirigiendo...')
         setTimeout(() => router.push(redirect), 1000)
@@ -74,7 +82,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?redirect=${redirect}`,
+        redirectTo: `${window.location.origin}/auth/callback?redirect=${encodeURIComponent(redirect)}`,
       },
     })
     if (error) setError(error.message)
@@ -134,7 +142,6 @@ function LoginForm() {
               required
               autoComplete="current-password"
               disabled={loading}
-              error={error}
               togglePassword
               showPassword={showPassword}
               onTogglePassword={() => setShowPassword(!showPassword)}

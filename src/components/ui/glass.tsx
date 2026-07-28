@@ -164,11 +164,12 @@ export const GlassInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes
   showPassword?: boolean
   onTogglePassword?: () => void
 }>(
-  ({ className, label, error, icon, id, togglePassword, showPassword, onTogglePassword, ...props }, ref) => {
+  ({ className, label, error, icon, id, type, togglePassword, showPassword, onTogglePassword, ...props }, ref) => {
     const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
     const [internalShowPassword, setInternalShowPassword] = useState(false)
-    const isPassword = props.type === 'password'
+    const isPassword = type === 'password'
     const displayShowPassword = togglePassword ? (showPassword ?? internalShowPassword) : false
+    const showToggleButton = isPassword && togglePassword
     const handleToggle = () => {
       if (onTogglePassword) {
         onTogglePassword()
@@ -193,7 +194,11 @@ export const GlassInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes
           <input
             ref={ref}
             id={inputId}
-            type={isPassword && !displayShowPassword ? 'password' : 'text'}
+            {...props}
+            // After `{...props}`: spreading last let a caller's `type="password"`
+            // overwrite the computed type, so the eye toggle never revealed
+            // anything. `type` is destructured out of props for the same reason.
+            type={isPassword && !displayShowPassword ? 'password' : type ?? 'text'}
             className={cn(
               'w-full rounded-2xl border bg-white/[0.05] backdrop-blur-sm',
               'text-blue-50 placeholder-blue-300/40',
@@ -201,18 +206,19 @@ export const GlassInput = forwardRef<HTMLInputElement, React.InputHTMLAttributes
               'focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/30 focus:bg-white/[0.07] focus:shadow-glow-sm',
               'disabled:opacity-40 disabled:cursor-not-allowed',
               icon ? 'pl-11' : 'pl-4',
-              displayShowPassword ? 'pr-12' : 'pr-4',
+              // Room for the eye button whenever it is rendered — not only while
+              // the password happens to be visible.
+              showToggleButton ? 'pr-12' : 'pr-4',
               'py-3.5',
-              error 
-                ? 'border-red-500/40 focus:ring-red-500/40' 
+              error
+                ? 'border-red-500/40 focus:ring-red-500/40'
                 : 'border-white/[0.08] hover:border-white/[0.14]',
               className
             )}
             aria-invalid={error ? 'true' : 'false'}
             aria-describedby={error ? `${inputId}-error` : undefined}
-            {...props}
           />
-          {isPassword && togglePassword && (
+          {showToggleButton && (
             <button
               type="button"
               onClick={handleToggle}
