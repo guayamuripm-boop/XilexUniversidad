@@ -33,7 +33,7 @@ interface SimulacrumQuestion {
     subtopic: {
       id: string
       name: string
-      area: { id: string; name: string; code: string }
+      area: { id: string; name: string; code: string; university?: { code: string } | null }
     }
   }
 }
@@ -90,7 +90,7 @@ export default function SimulacrumPage() {
 
         const { data: simData, error } = await supabase
           .from('simulacrums')
-          .select(`*, simulacrum_questions (*, question:questions (*, subtopic:subtopics (id, name, area:areas (id, name, code))))`)
+          .select(`*, simulacrum_questions (*, question:questions (*, subtopic:subtopics (id, name, area:areas (id, name, code, university:universities (code)))))`)
           .eq('id', simulacrumId)
           .eq('user_id', user.id)
           .single()
@@ -302,6 +302,16 @@ export default function SimulacrumPage() {
     const incorrectCount = currentSimulacrum.incorrect_count ?? 0
     const unansweredCount = currentSimulacrum.unanswered_count ?? 0
 
+    // La PDU de la UNIMET no puntúa por aciertos brutos: suma 1 punto por
+    // respuesta correcta y resta 1/3 por incorrecta, dejando las no respondidas
+    // en cero. Mostrar solo el porcentaje de aciertos da una idea optimista de
+    // dónde queda realmente el aspirante.
+    const esUnimet = simQuestions.some(
+      sq => sq.question.subtopic?.area?.university?.code === 'unimet'
+    )
+    const puntajePdu = correctCount - incorrectCount / 3
+    const porcentajePdu = total > 0 ? Math.max(0, (puntajePdu / total) * 100) : 0
+
     const filteredQuestions = simQuestions.filter((sq) => {
       if (reviewFilter === 'all') return true
       if (reviewFilter === 'correct') return sq.is_correct === true
@@ -362,6 +372,30 @@ export default function SimulacrumPage() {
                 <div className="text-xs text-amber-400/70 mt-0.5">Sin responder</div>
               </div>
             </div>
+
+            {esUnimet && (
+              <div className="mb-6 rounded-2xl border border-primary/25 bg-primary/[0.06] p-4 text-left">
+                <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-primary">
+                    Puntaje corregido PDU
+                  </span>
+                  <span className="text-lg font-bold text-white">
+                    {puntajePdu.toFixed(2).replace('.', ',')} / {total}
+                    <span className="ml-2 text-sm font-semibold text-blue-200/70">
+                      ({porcentajePdu.toFixed(1).replace('.', ',')}%)
+                    </span>
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-blue-200/60">
+                  La UNIMET suma 1 punto por acierto y resta 1/3 por cada respuesta
+                  incorrecta; las que dejas en blanco no restan. Por eso el manual
+                  oficial recomienda no adivinar: {incorrectCount} incorrecta
+                  {incorrectCount === 1 ? '' : 's'} te
+                  {incorrectCount === 1 ? ' costó ' : ' costaron '}
+                  {(incorrectCount / 3).toFixed(2).replace('.', ',')} puntos.
+                </p>
+              </div>
+            )}
 
             {/* Progress bar */}
             <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden mb-5">

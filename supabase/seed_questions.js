@@ -83,6 +83,9 @@ const SOURCES = [
   { tag: 'lote5', file: path.join(BANCO_DIR, 'files (2)', 'Xilex_Banco_Ejercicios_Lote5_UNIMET_PDU.csv') },
   { tag: 'lote6', file: path.join(BANCO_DIR, 'files (2)', 'Xilex_Banco_Ejercicios_Lote6_USB.csv') },
   { tag: 'lote7', file: path.join(BANCO_DIR, 'files (2)', 'Xilex_Banco_Ejercicios_Lote7_UCAB.csv') },
+  // Generado por `node banco/build_lote8.js` a partir de banco/lote8_unimet_src.js.
+  // No editar el CSV a mano: se regenera y se valida desde esa fuente.
+  { tag: 'lote8', file: path.join(BANCO_DIR, 'Xilex_Banco_Ejercicios_Lote8_UNIMET_PDU.csv') },
 ]
 
 const UNIVERSITY_BY_INSTITUCION = { UCV: 'simadi', UNIMET: 'unimet', USB: 'usb', UCAB: 'ucab' }

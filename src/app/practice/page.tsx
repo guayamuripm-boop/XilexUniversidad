@@ -27,14 +27,17 @@ const universities = [
   {
     code: 'unimet',
     name: 'UNIMET',
+    // Cifras del Manual de Información General de la PDU: cada prueba tiene 50
+    // planteamientos de cuatro alternativas; 75 minutos la cuantitativa y 60 la
+    // verbal.
     areas: [
-      { code: 'cuantitativo', name: 'Aptitud Cuantitativa', questions: 45, time: 60 },
-      { code: 'verbal', name: 'Aptitud Verbal', questions: 45, time: 60 },
+      { code: 'cuantitativo', name: 'Aptitud Cuantitativa', questions: 50, time: 75 },
+      { code: 'verbal', name: 'Aptitud Verbal', questions: 50, time: 60 },
     ],
-    totalQuestions: 90,
-    totalTime: 120,
+    totalQuestions: 100,
+    totalTime: 135,
     status: 'active',
-    description: 'PDU igual para todas las carreras. Índice: 75% prueba + 25% notas.',
+    description: 'PDU igual para todas las carreras. Resta 1/3 de punto por respuesta incorrecta.',
   },
   {
     code: 'usb',
@@ -62,6 +65,23 @@ const universities = [
     description: 'Prueba común a 19 carreras y 5 TSU. IIA determina corte.',
   },
 ]
+
+type University = typeof universities[number]
+
+/**
+ * Minutos por pregunta que concede la prueba real, promediados sobre las áreas
+ * elegidas. Antes se usaba un 1,5 fijo para todas las universidades, lo que
+ * regalaba tiempo en las áreas más rápidas: la verbal de la UNIMET, por
+ * ejemplo, da 60 minutos para 50 preguntas, es decir 1,2 por pregunta.
+ */
+function minutesPerQuestion(u: University, areaCodes: string[]): number {
+  const areas = areaCodes.length > 0
+    ? u.areas.filter(a => areaCodes.includes(a.code))
+    : u.areas
+  const q = areas.reduce((s, a) => s + a.questions, 0)
+  const t = areas.reduce((s, a) => s + a.time, 0)
+  return q > 0 ? t / q : 1.5
+}
 
 export default function PracticePage() {
   const router = useRouter()
@@ -182,7 +202,11 @@ export default function PracticePage() {
           // Both must reflect what was actually drawn, not what was requested:
           // the bank may hold fewer questions than the slider asked for.
           total_questions: uniqueQuestions.length,
-          time_limit_minutes: Math.max(1, Math.round(uniqueQuestions.length * 1.5)),
+          // El ritmo lo fija la prueba real de cada área, no una constante.
+          time_limit_minutes: Math.max(1, Math.round(
+            uniqueQuestions.length * minutesPerQuestion(
+              universities.find(u => u.code === selectedUni)!, selectedAreas)
+          )),
           status: 'in_progress',
           // Without started_at the simulacrum page cannot compute the remaining
           // time and the countdown stays frozen at 00:00.
@@ -218,6 +242,9 @@ export default function PracticePage() {
   }
 
   const uni = universities.find(u => u.code === selectedUni)
+  const estimatedMinutes = uni
+    ? Math.max(1, Math.round(questionCount * minutesPerQuestion(uni, selectedAreas)))
+    : 0
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
@@ -371,9 +398,15 @@ export default function PracticePage() {
                     <span className="font-semibold text-white">{questionCount}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-blue-200/60">Tiempo estimado</span>
+                    <span className="text-blue-200/60">Tiempo</span>
                     <span className="font-semibold text-white">
-                      ~{Math.round(questionCount * 1.5)} min
+                      {estimatedMinutes} min
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-blue-200/60">Ritmo real de la prueba</span>
+                    <span className="font-semibold text-white">
+                      {minutesPerQuestion(uni, selectedAreas).toFixed(2).replace('.', ',')} min/pregunta
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">

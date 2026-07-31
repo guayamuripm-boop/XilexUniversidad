@@ -15,6 +15,9 @@ interface Question {
       id: string
       name: string
       code: string
+      /** Presente cuando la consulta la trae; se usa para aplicar las reglas de
+       *  puntuación propias de cada universidad (p. ej. la penalización de la PDU). */
+      university?: { code: string } | null
     }
   }
 }
