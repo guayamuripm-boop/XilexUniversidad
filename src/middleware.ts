@@ -1,8 +1,18 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-/** Routes that require a session. Everything else is public. */
-const PROTECTED_PREFIXES = ['/dashboard', '/practice', '/progress', '/settings', '/simulacrum', '/simulacrums']
+/**
+ * Routes that require a session. Everything else is public.
+ *
+ * `/metodos` and `/plan` stay deliberately out: their content is static (or,
+ * for `/plan`, tracked in the browser's own localStorage) and needs neither
+ * session nor database, so a visitor — or a student whose Supabase project is
+ * asleep — can still read the methods, the exam tips and the study roadmap.
+ */
+const PROTECTED_PREFIXES = [
+  '/dashboard', '/practice', '/entrenamiento', '/progress', '/settings',
+  '/simulacrum', '/simulacrums',
+]
 
 /** Auth pages a signed-in user should not see. */
 const AUTH_ONLY_PREFIXES = ['/auth/login', '/auth/register']

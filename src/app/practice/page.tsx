@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { GlassCard, GlassButton } from '@/components/ui/glass'
 import { Brain, Target, Play, Users, Trophy, ArrowRight, CheckCircle2, Sparkles, AlertCircle } from 'lucide-react'
@@ -84,7 +84,16 @@ function minutesPerQuestion(u: University, areaCodes: string[]): number {
 }
 
 export default function PracticePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <Practice />
+    </Suspense>
+  )
+}
+
+function Practice() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [selectedUni, setSelectedUni] = useState<string | null>(null)
   const [selectedAreas, setSelectedAreas] = useState<string[]>([])
   const [questionCount, setQuestionCount] = useState(20)
@@ -93,6 +102,27 @@ export default function PracticePage() {
   const [error, setError] = useState('')
 
   const supabase = createClient()
+
+  /**
+   * Preselección por URL (`?uni=unimet&areas=cuantitativo&count=50`).
+   *
+   * La usa la hoja de ruta del plan de estudio (`/plan`) para enlazar directo
+   * al simulacro exacto del día en lugar de dejar que el aspirante repita la
+   * configuración a mano cada vez.
+   */
+  useEffect(() => {
+    const uni = searchParams.get('uni')
+    if (!uni || !universities.some(u => u.code === uni)) return
+    setSelectedUni(uni)
+    setShowConfig(true)
+    const areas = searchParams.get('areas')
+    if (areas) setSelectedAreas(areas.split(',').filter(Boolean))
+    const count = Number(searchParams.get('count'))
+    if (Number.isFinite(count) && count >= 10) setQuestionCount(count)
+    // Los parámetros solo importan en la carga inicial: no deben pelear con la
+    // selección manual del usuario en renders posteriores.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleStartSimulacrum = async () => {
     if (!selectedUni) return

@@ -3,17 +3,17 @@
 import Link from 'next/link'
 import { GlassCard, GlassButton } from '@/components/ui/glass'
 import { 
-  BookOpen, Target, Zap, Brain, Trophy, Users,
+  BookOpen, Target, Zap, Brain, Trophy,
   ArrowRight, CheckCircle2, Shield, Sparkles
 } from 'lucide-react'
 
 const features = [
   { icon: BookOpen, title: 'Banco propio', desc: 'Ejercicios originales por universidad, área y subtema. No copiamos exámenes filtrados.', color: 'primary' },
   { icon: Target, title: 'Simulacros configurables', desc: 'Practica por universidad o mixto. Tú eliges el enfoque y la cantidad de preguntas.', color: 'accent-sky' },
-  { icon: Brain, title: 'Feedback explicado', desc: 'Cada respuesta trae su explicación detallada. Aprendes del error, no solo si acertaste.', color: 'accent-emerald' },
-  { icon: Zap, title: 'Medición por subtema', desc: 'Sigue tu progreso en acentuación, silogismos, analogías y mucho más.', color: 'accent-amber' },
+  { icon: Brain, title: 'Explicación reforzada', desc: 'No solo por qué esa opción es la correcta: el método completo del tipo de ejercicio, la trampa típica y el truco.', color: 'accent-emerald' },
+  { icon: Sparkles, title: 'Modo sin miedo', desc: 'Entrena sin cronómetro ni puntaje. Fallas, la opción se descarta y sigues intentando con pistas.', color: 'accent-amber' },
+  { icon: Zap, title: 'Métodos y mnemotecnias', desc: 'Un procedimiento paso a paso por tipo de ejercicio, más las frases que conviene llevarse memorizadas.', color: 'accent-violet' },
   { icon: Shield, title: 'Base legal sólida', desc: 'Contenido basado en los modelos oficiales publicados por UCV, USB, UNIMET y UCAB.', color: 'primary' },
-  { icon: Users, title: 'Acceso libre', desc: 'Cualquier bachiller venezolano puede practicar sin barreras.', color: 'accent-violet' },
 ]
 
 // Las cuatro tienen banco de preguntas cargado y áreas configuradas en la base.
@@ -47,6 +47,14 @@ export default function HomePage() {
                   {t.label}
                 </Link>
               ))}
+              {/* El centro de métodos es público a propósito: es lo que se puede
+                  mostrar sin pedir registro, y lo que mejor explica qué es XILEX. */}
+              <Link href="/metodos" className="text-sm font-medium text-primary/80 hover:text-primary transition-colors">
+                Métodos y trucos
+              </Link>
+              <Link href="/plan" className="text-sm font-medium text-primary/80 hover:text-primary transition-colors">
+                Plan UNIMET
+              </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <Link href="/auth/login" className="btn-ghost text-sm hidden sm:inline-flex">Iniciar sesión</Link>
@@ -82,8 +90,9 @@ export default function HomePage() {
                 Comenzar gratis
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link href="#features" className="btn-outline text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto">
-                Ver cómo funciona
+              <Link href="/metodos" className="btn-outline text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 w-full sm:w-auto">
+                <BookOpen className="w-5 h-5" />
+                Ver los métodos
               </Link>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-blue-300/40">

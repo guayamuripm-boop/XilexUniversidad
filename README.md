@@ -53,6 +53,9 @@ El esquema vive en `supabase/`. Orden de aplicación sobre un proyecto nuevo:
 5. **`migrations/20260727000000_fix_functions_and_triggers.sql`** — correcciones
    de `get_random_questions`, `get_user_streak` y el trigger de perfiles.
    Ver [AUDITORIA.md](../AUDITORIA.md).
+6. El resto de `migrations/` por orden de fecha. La última crea el subtema
+   `comprension` en USB/Habilidades y UCAB/Verbal, que el paso 2 declaraba pero
+   que nunca llegó a existir en la base.
 
 Se aplican pegándolos en el **SQL Editor** de Supabase, o con la CLI. La CLI
 necesita la contraseña de la base (Dashboard → Project Settings → Database);
@@ -91,13 +94,18 @@ src/
     auth/                    login, registro, recuperación, callback OAuth
     api/account/route.ts     borrado de cuenta (requiere service role)
     dashboard/               resumen, actividad reciente, fortalezas/debilidades
+    metodos/                 centro de estudio: métodos, tips y mnemotecnias (público)
+    entrenamiento/           práctica sin cronómetro, con pistas y reintentos
     practice/                configurador de simulacros
     simulacrum/[id]/         examen en curso + pantalla de resultados
     simulacrums/             historial
     progress/                analítica por subtema
     settings/                perfil, universidades, cluster SIMADI, datos
-  components/ui/glass.tsx    sistema de componentes "glass"
+  components/
+    ui/glass.tsx             sistema de componentes "glass"
+    ExplicacionReforzada.tsx explicación de la pregunta + método del subtema
   lib/
+    metodos.ts               métodos, tips, mnemotecnias y política de respuesta
     store.ts                 estado zustand (simulacro, auth, UI)
     useSession.ts            resolución de sesión + carga de perfil
     supabase/                clientes de navegador y servidor
@@ -128,17 +136,22 @@ supabase/
 
 | Universidad / área | Preguntas |
 |---|---|
-| simadi/logico | 173 |
-| simadi/verbal | 138 |
+| simadi/logico | 203 |
+| simadi/verbal | 163 |
 | simadi/especializacion | 105 |
-| unimet/cuantitativo | 164 |
-| unimet/verbal | 163 |
-| usb/conocimientos | 66 |
-| usb/habilidades | 34 |
-| ucab/verbal | 34 |
-| ucab/logico | 33 |
-| ucab/numerica | 33 |
-| **Total** | **943** |
+| unimet/cuantitativo | 342 |
+| unimet/verbal | 284 |
+| usb/conocimientos | 96 |
+| usb/habilidades | 55 |
+| ucab/logico | 57 |
+| ucab/numerica | 54 |
+| ucab/verbal | 52 |
+| **Total** | **1411** |
+
+Preguntas nuevas de SIMADI, USB o UCAB: editar `banco/lote10_src.js` y regenerar
+con `node banco/build_lote10.js`. El validador comprueba, entre otras cosas, que
+el subtema exista **en esa área de esa universidad** — sin eso, `seed_questions.js`
+descarta la fila con un aviso y la pregunta nunca llega a la base.
 
 Clusters de especialización SIMADI: `salud` (45), `ciencia_tecnologia` (35),
 `sociales_humanidades` (25). **`agro_mar` no tiene preguntas todavía** y aparece

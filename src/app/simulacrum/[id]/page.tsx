@@ -8,9 +8,11 @@ import { GlassCard, GlassButton } from '@/components/ui/glass'
 import { useSimulacrumStore } from '@/lib/store'
 import {
   Brain, Clock, CheckCircle2, XCircle, ChevronLeft, ChevronRight,
-  Flag, ArrowRight, Loader2, Play, Home, AlertCircle, Filter, Eye
+  ArrowRight, Loader2, Play, Home, AlertCircle, Filter, Eye, BookOpen
 } from 'lucide-react'
 import { formatTime, cn, getDifficultyColor } from '@/lib/utils'
+import { ExplicacionReforzada } from '@/components/ExplicacionReforzada'
+import { metodoParaSubtema } from '@/lib/metodos'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +34,7 @@ interface SimulacrumQuestion {
     difficulty: 'easy' | 'medium' | 'hard'
     subtopic: {
       id: string
+      code: string
       name: string
       area: { id: string; name: string; code: string; university?: { code: string } | null }
     }
@@ -90,7 +93,7 @@ export default function SimulacrumPage() {
 
         const { data: simData, error } = await supabase
           .from('simulacrums')
-          .select(`*, simulacrum_questions (*, question:questions (*, subtopic:subtopics (id, name, area:areas (id, name, code, university:universities (code)))))`)
+          .select(`*, simulacrum_questions (*, question:questions (*, subtopic:subtopics (id, code, name, area:areas (id, name, code, university:universities (code)))))`)
           .eq('id', simulacrumId)
           .eq('user_id', user.id)
           .single()
@@ -320,6 +323,28 @@ export default function SimulacrumPage() {
       return true
     })
 
+    // Los métodos detrás de lo que salió mal. Un porcentaje dice cómo te fue;
+    // esto dice qué estudiar mañana, que es lo que el aspirante necesita para
+    // que el siguiente simulacro salga distinto.
+    const metodosARepasar = (() => {
+      const cuenta = new Map<string, { slug: string; nombre: string; veces: number }>()
+      for (const sq of simQuestions) {
+        if (sq.is_correct === true) continue
+        const metodo = metodoParaSubtema(
+          sq.question.subtopic?.code,
+          sq.question.subtopic?.area?.code
+        )
+        if (!metodo) continue
+        const previo = cuenta.get(metodo.slug)
+        cuenta.set(metodo.slug, {
+          slug: metodo.slug,
+          nombre: metodo.nombre,
+          veces: (previo?.veces ?? 0) + 1,
+        })
+      }
+      return [...cuenta.values()].sort((a, b) => b.veces - a.veces).slice(0, 5)
+    })()
+
     const getQuestionStatus = (sq: SimulacrumQuestion): 'correct' | 'incorrect' | 'unanswered' => {
       if (sq.is_correct === true) return 'correct'
       if (sq.user_answer === null) return 'unanswered'
@@ -411,6 +436,42 @@ export default function SimulacrumPage() {
               <Link href="/practice" className="btn-primary text-sm"><Play className="w-4 h-4" /> Nuevo simulacro</Link>
             </div>
           </GlassCard>
+
+          {/* Qué estudiar a partir de este resultado */}
+          {metodosARepasar.length > 0 && (
+            <GlassCard hover={false} className="p-5 mb-6 rounded-3xl animate-fade-in">
+              <h3 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-accent-amber" />
+                Qué repasar antes del próximo intento
+              </h3>
+              <p className="text-xs text-blue-300/45 mb-4">
+                Los métodos detrás de lo que fallaste o dejaste en blanco. Cada uno
+                lleva su procedimiento paso a paso, las trampas típicas y un ejemplo
+                resuelto.
+              </p>
+              <div className="space-y-2">
+                {metodosARepasar.map(m => (
+                  <Link
+                    key={m.slug}
+                    href={`/metodos?m=${m.slug}`}
+                    className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-3 transition-colors hover:border-primary/25 hover:bg-primary/[0.04]"
+                  >
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-accent-amber/15 text-sm font-bold text-accent-amber">
+                      {m.veces}
+                    </div>
+                    <span className="flex-1 text-sm font-medium text-white">{m.nombre}</span>
+                    <ChevronRight className="w-4 h-4 flex-shrink-0 text-primary/70" />
+                  </Link>
+                ))}
+              </div>
+              <Link
+                href="/entrenamiento"
+                className="btn-secondary text-sm mt-4 inline-flex w-full justify-center"
+              >
+                <Play className="w-4 h-4" /> Practicar estos temas sin cronómetro
+              </Link>
+            </GlassCard>
+          )}
 
           {/* Filter Tabs */}
           <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
@@ -547,8 +608,14 @@ export default function SimulacrumPage() {
                     </button>
 
                     {isExpanded && (
-                      <div className="mt-2 glass p-3 rounded-xl border-l-4 border-primary">
-                        <p className="text-blue-200/70 text-xs leading-relaxed">{sq.question.explanation}</p>
+                      <div className="mt-2">
+                        <ExplicacionReforzada
+                          explicacion={sq.question.explanation}
+                          subtema={sq.question.subtopic?.code}
+                          areaCodigo={sq.question.subtopic?.area?.code}
+                          respuestaCorrecta={correctAnswer}
+                          compacto
+                        />
                       </div>
                     )}
                   </div>

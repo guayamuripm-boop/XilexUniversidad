@@ -21,8 +21,10 @@ import {
   BookOpen,
   ChevronRight,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  CalendarCheck
 } from 'lucide-react'
+import { diasHastaElExamen, diaDeHoy } from '@/lib/plan'
 import { formatDuration, cn, getMasteryColor } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -216,9 +218,17 @@ export default function DashboardPage() {
             </Link>
 
             <div className="flex items-center gap-3">
-              <Link href="/practice" className="hidden sm:flex btn-primary text-sm">
-                <Plus className="w-4 h-4" />
-                Nuevo simulacro
+              <Link href="/metodos" className="hidden md:flex btn-ghost text-sm">
+                <BookOpen className="w-4 h-4" />
+                Métodos
+              </Link>
+              <Link href="/entrenamiento" className="hidden sm:flex btn-secondary text-sm">
+                <Sparkles className="w-4 h-4" />
+                Entrenar
+              </Link>
+              <Link href="/plan" className="hidden sm:flex btn-primary text-sm">
+                <CalendarCheck className="w-4 h-4" />
+                Plan UNIMET
               </Link>
 
               <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl glass-subtle">
@@ -252,6 +262,9 @@ export default function DashboardPage() {
               Nuevo simulacro
             </Link>
           </div>
+
+          {/* Banner del plan UNIMET: la razón de ser del dashboard estos días */}
+          <PlanBanner />
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -324,12 +337,33 @@ export default function DashboardPage() {
                 Acciones rápidas
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <Link href="/plan" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-amber/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <CalendarCheck className="w-6 h-6 text-accent-amber" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Plan UNIMET</h3>
+                  <p className="text-xs text-blue-300/40">Hoja de ruta día por día</p>
+                </Link>
+                <Link href="/entrenamiento" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-violet/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <Sparkles className="w-6 h-6 text-accent-violet" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Entrenar sin miedo</h3>
+                  <p className="text-xs text-blue-300/40">Sin reloj, con pistas y reintentos</p>
+                </Link>
                 <Link href="/practice" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
                   <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                     <Play className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Nuevo simulacro</h3>
-                  <p className="text-xs text-blue-300/40">Configura y empieza a practicar</p>
+                  <p className="text-xs text-blue-300/40">Cronometrado, como el examen real</p>
+                </Link>
+                <Link href="/metodos" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
+                  <div className="w-12 h-12 rounded-2xl bg-accent-sky/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <BookOpen className="w-6 h-6 text-accent-sky" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-1 text-sm sm:text-base">Métodos y trucos</h3>
+                  <p className="text-xs text-blue-300/40">Cómo se resuelve cada tipo</p>
                 </Link>
                 <Link href="/progress" className="glass glass-glow p-4 sm:p-5 text-center group rounded-3xl">
                   <div className="w-12 h-12 rounded-2xl bg-accent-emerald/10 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
@@ -512,5 +546,45 @@ export default function DashboardPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+/**
+ * Cuenta regresiva al examen del 26 de agosto + acceso directo al día de hoy
+ * en `/plan`. Vive aparte del resto del dashboard porque depende de la fecha
+ * real del navegador, no de nada que venga de Supabase.
+ */
+function PlanBanner() {
+  const [hoy, setHoy] = useState<Date | null>(null)
+  useEffect(() => setHoy(new Date()), [])
+
+  const dias = hoy ? diasHastaElExamen(hoy) : null
+  const diaActual = hoy ? diaDeHoy(hoy) : null
+
+  return (
+    <Link
+      href="/plan"
+      className="glass glass-glow mt-4 flex flex-col gap-3 rounded-3xl p-4 transition-all hover:border-primary/25 sm:flex-row sm:items-center sm:gap-5 sm:p-5"
+    >
+      <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-accent-amber/10">
+        <CalendarCheck className="h-6 w-6 text-accent-amber" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-semibold text-white">Plan de estudio UNIMET</h3>
+          {dias !== null && dias >= 0 && (
+            <span className="rounded-full bg-accent-amber/15 px-2 py-0.5 text-[11px] font-bold text-accent-amber">
+              {dias === 0 ? 'Es hoy' : `Faltan ${dias} días`}
+            </span>
+          )}
+        </div>
+        <p className="mt-0.5 text-sm text-blue-300/50">
+          {diaActual
+            ? `Hoy toca: ${diaActual.titulo}`
+            : 'Sigue tu hoja de ruta día por día, con seguimiento de progreso.'}
+        </p>
+      </div>
+      <ChevronRight className="hidden h-5 w-5 flex-shrink-0 text-primary/70 sm:block" />
+    </Link>
   )
 }

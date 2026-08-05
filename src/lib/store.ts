@@ -10,6 +10,9 @@ interface Question {
   difficulty: 'easy' | 'medium' | 'hard'
   subtopic: {
     id: string
+    /** Código del subtema (`silogismos`, `acentuacion`, …). Es la clave con la
+     *  que `lib/metodos.ts` engancha el método de resolución a la pregunta. */
+    code: string
     name: string
     area: {
       id: string

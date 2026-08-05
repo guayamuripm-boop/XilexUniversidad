@@ -88,6 +88,9 @@ const SOURCES = [
   { tag: 'lote8', file: path.join(BANCO_DIR, 'Xilex_Banco_Ejercicios_Lote8_UNIMET_PDU.csv') },
   // Reposición del banco heredado tras depurarlo. Fuente: banco/lote9_unimet_src.js.
   { tag: 'lote9', file: path.join(BANCO_DIR, 'Xilex_Banco_Ejercicios_Lote9_UNIMET_PDU.csv') },
+  // Refuerzo de SIMADI, USB y UCAB, que se habían quedado atrás mientras los
+  // lotes 8 y 9 ampliaban la UNIMET. Fuente: banco/lote10_src.js.
+  { tag: 'lote10', file: path.join(BANCO_DIR, 'Xilex_Banco_Ejercicios_Lote10_UCV_USB_UCAB.csv') },
 ]
 
 const UNIVERSITY_BY_INSTITUCION = { UCV: 'simadi', UNIMET: 'unimet', USB: 'usb', UCAB: 'ucab' }
